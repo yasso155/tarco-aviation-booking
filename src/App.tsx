@@ -32,7 +32,8 @@ import {
   Zap,
   Search,
   Menu,
-  ExternalLink
+  ExternalLink,
+  ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth, signIn, logout } from './firebase';
@@ -45,58 +46,7 @@ import {
 import { HeroDatePicker } from './components/HeroDatePicker';
 import { InlineCalendar } from './components/InlineCalendar';
 
-// --- Error Handling ---
-interface ErrorBoundaryProps {
-  children: React.ReactNode;
-}
 
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: any;
-}
-
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = { hasError: false, error: null };
-  public props!: ErrorBoundaryProps;
-
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-  }
-
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error("ErrorBoundary caught an error", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-          <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-4">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
-              <X size={32} />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900">Something went wrong</h2>
-            <p className="text-slate-500 text-sm">
-              We encountered an error while loading the application. Please try refreshing the page.
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full bg-tarco-blue text-white py-3 rounded-xl font-bold"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
 
 enum OperationType {
   CREATE = 'create',
@@ -251,11 +201,6 @@ const TRANSLATIONS = {
       seats: 'Seats',
       success: 'Confirm'
     },
-    hero: {
-      title: 'Safety and',
-      gold: 'Smiles',
-      subtitle: 'Connecting Sudan to the world with our modern B737-800NG fleet and world-class Sudanese hospitality.'
-    },
     booking: {
       roundTrip: 'Round Trip',
       oneWay: 'One Way',
@@ -322,14 +267,6 @@ const TRANSLATIONS = {
       wallet: 'Add to Wallet',
       bookAnother: 'Book Another Flight'
     },
-    journey: {
-      title: 'Complete Your Journey',
-      seats: { title: 'Seat Selection', desc: 'Choose your favorite spot on the plane.' },
-      weight: { title: 'Buy Weight', desc: 'Pre-book extra baggage at discounted rates.' },
-      guidance: { title: 'Travel Guidance', desc: 'Essential information for your destination.' },
-      manage: { title: 'Manage Booking', desc: 'Modify or upgrade your flight easily.' },
-      learn: 'Learn More'
-    },
     upgrade: {
       title: 'Elevate Your Journey',
       subtitle: 'Limited Offer',
@@ -370,13 +307,95 @@ const TRANSLATIONS = {
       starting: 'Starting from',
       bookNow: 'Book Now'
     },
+    utility: {
+      country: 'Country / Language',
+      currency: 'Currency: USD',
+      support: 'Support',
+      pearl: 'Tarco Pearl'
+    },
+    search: {
+      overlayTitle: 'Search Tarco Aviation',
+      overlaySubtitle: 'Find flights, destinations, and travel information.',
+      placeholder: 'Where would you like to go?',
+      categories: {
+        destinations: 'Popular Destinations',
+        status: 'Flight Status',
+        requirements: 'Travel Requirements'
+      }
+    },
+    stats: {
+      flights: 'Flights Today',
+      destinations: 'Destinations',
+      passengers: 'Passengers Served',
+      rate: 'On-Time Rate'
+    },
+    hero: {
+      title: 'Safety and',
+      gold: 'Smiles',
+      subtitle: 'Connecting Sudan to the world with our modern B737-800NG fleet and world-class Sudanese hospitality.',
+      cta: 'Start planning',
+      bookNow: 'Book Now'
+    },
+    navMenu: {
+      travel: {
+        label: 'Travel',
+        items: {
+          book: { name: 'Book a Flight', desc: 'Plan your next adventure with our global network.' },
+          status: { name: 'Flight Status', desc: 'Real-time updates on departures and arrivals.' },
+          destinations: { name: 'Destinations', desc: 'Explore where we fly across Africa and the Middle East.' },
+          schedule: { name: 'Flight Schedule', desc: 'View our seasonal flight operations and timings.' }
+        }
+      },
+      manage: {
+        label: 'Manage',
+        items: {
+          checkin: { name: 'Check-in', desc: 'Speed up your journey with online check-in.' },
+          trips: { name: 'My Trips', desc: 'View, modify, or upgrade your existing bookings.' },
+          baggage: { name: 'Extra Baggage', desc: 'Pre-book additional baggage at discounted rates.' },
+          refund: { name: 'Refund Request', desc: 'Submit and track your ticket refund requests.' }
+        }
+      },
+      experience: {
+        label: 'Experience',
+        items: {
+          lounge: { name: 'Pearl Lounge', desc: 'Relax in comfort at our exclusive airport lounges.' },
+          fleet: { name: 'Fleet', desc: 'Learn about our modern B737-800NG aircraft.' },
+          cabins: { name: 'Cabins', desc: 'Discover our Business and Economy Class services.' },
+          dining: { name: 'In-flight Dining', desc: 'Taste the best of Sudanese hospitality in the sky.' }
+        }
+      },
+      support: {
+        label: 'Support',
+        items: {
+          contact: { name: 'Contact Us', desc: 'Get in touch with our local offices worldwide.' },
+          faqs: { name: 'FAQs', desc: 'Find quick answers to common travel questions.' },
+          visa: { name: 'Travel Requirements', desc: 'Essential info on visas, health, and documents.' },
+          center: { name: 'Help Center', desc: 'Comprehensive support for your entire journey.' }
+        }
+      }
+    },
+    journey: {
+      title: 'Complete Your Journey',
+      seats: { title: 'Seat Selection', desc: 'Pre-book your favorite window or aisle seat.' },
+      weight: { title: 'Buy Weight', desc: 'Avoid over-weight charges by pre-booking baggage.' },
+      guidance: { title: 'Travel Guidance', desc: 'Up-to-date entry requirements and travel help.' },
+      manage: { title: 'Manage Booking', desc: 'Easy online modifications to your travel itinerary.' },
+      learn: 'Learn More'
+    },
+    destTags: {
+      booked: 'Most Booked',
+      value: 'Best Value',
+      core: 'Core Hub',
+      active: 'Active Hub',
+      popular: 'Popular'
+    },
     excellence: {
-      title: 'Wonderful and Unique',
-      subtitle: 'Safety and Smiles',
-      point1: 'Modern B737-800NG Fleet',
-      point2: 'Tarco Pearl Lounge Hospitality',
-      point3: 'Direct flights to 20+ destinations',
-      desc: 'We have developed our services so that you can enjoy a wonderful and unique travel experience.'
+      title: 'Excellence in Service',
+      subtitle: 'Award-winning Sudanese hospitality',
+      desc: 'Connecting Sudan to the world with our modern B737-800NG fleet and world-class Sudanese hospitality.',
+      point1: 'Safety and Comfort First',
+      point2: 'Professional Cabin Crew',
+      point3: 'Modern Fleet'
     }
   },
   ar: {
@@ -384,6 +403,74 @@ const TRANSLATIONS = {
     font: 'font-arabic',
     brand: { first: 'تاركو', second: 'للطيران' },
     slogan: 'أسطورة أفريقيا',
+    motto: 'سلام وابتسام',
+    utility: {
+      country: 'الدولة / اللغة',
+      currency: 'العملة: دولار',
+      support: 'الدعم',
+      pearl: 'تاركو بيرل'
+    },
+    search: {
+      overlayTitle: 'البحث في تاركو للطيران',
+      overlaySubtitle: 'ابحث عن الرحلات والوجهات ومعلومات السفر.',
+      placeholder: 'إلى أين تود الذهاب؟',
+      categories: {
+        destinations: 'وجهات شعبية',
+        status: 'حالة الرحلة',
+        requirements: 'متطلبات السفر'
+      }
+    },
+    stats: {
+      flights: 'رحلات اليوم',
+      destinations: 'وجهة',
+      passengers: 'مسافر تم خدمتهم',
+      rate: 'نسبة الدقة'
+    },
+    hero: {
+      title: 'سلام',
+      gold: 'وابتسام',
+      subtitle: 'نربط السودان بالعالم مع أسطولنا الحديث B737-800NG وكرم الضيافة السوداني العالمي.',
+      cta: 'ابدأ التخطيط',
+      bookNow: 'احجز الآن'
+    },
+    navMenu: {
+      travel: {
+        label: 'السفر',
+        items: {
+          book: { name: 'حجز رحلة', desc: 'خطط لمغامرتك التالية مع شبكتنا العالمية.' },
+          status: { name: 'حالة الرحلة', desc: 'تحديثات في الوقت الفعلي للمغادرة والوصول.' },
+          destinations: { name: 'الوجهات', desc: 'استكشف أين نطير عبر أفريقيا والشرق الأوسط.' },
+          schedule: { name: 'جدول الرحلات', desc: 'عرض عمليات الرحلات الموسمية والتوقيتات.' }
+        }
+      },
+      manage: {
+        label: 'الإدارة',
+        items: {
+          checkin: { name: 'إنهاء الإجراءات', desc: 'سرع رحلتك مع إنهاء الإجراءات عبر الإنترنت.' },
+          trips: { name: 'رحلاتي', desc: 'عرض أو تعديل أو ترقية حجوزاتك الحالية.' },
+          baggage: { name: 'وزن إضافي', desc: 'احجز وزناً إضافياً مسبقاً بأسعار مخفضة.' },
+          refund: { name: 'طلب استرداد', desc: 'قدم وتتبع طلبات استرداد ثمن التذكرة.' }
+        }
+      },
+      experience: {
+        label: 'التجربة',
+        items: {
+          lounge: { name: 'صالة بيرل', desc: 'استرخ في راحة في صالات المطار الحصرية لدينا.' },
+          fleet: { name: 'الأسطول', desc: 'تعرف على طائراتنا الحديثة B737-800NG.' },
+          cabins: { name: 'المقصورات', desc: 'اكتشف خدماتنا في درجة الأعمال والضيافة.' },
+          dining: { name: 'الطعام على متن الطائرة', desc: 'تذوق أفضل ما في الضيافة السودانية في السماء.' }
+        }
+      },
+      support: {
+        label: 'الدعم',
+        items: {
+          contact: { name: 'اتصل بنا', desc: 'تواصل مع مكاتبنا المحلية في جميع أنحاء العالم.' },
+          faqs: { name: 'الأسئلة الشائعة', desc: 'ابحث عن إجابات سريعة لأسئلة السفر الشائعة.' },
+          visa: { name: 'متطلبات السفر', desc: 'معلومات أساسية عن التأشيرات والصحة والمستندات.' },
+          center: { name: 'مركز المساعدة', desc: 'دعم شامل لرحلتك بأكملها.' }
+        }
+      }
+    },
     nav: {
       book: 'احجز',
       checkin: 'إنهاء إجراءات السفر',
@@ -398,7 +485,7 @@ const TRANSLATIONS = {
       seats: 'المقاعد',
       success: 'تأكيد'
     },
-    hero: {
+    heroAlt: {
       title: 'حلق فوق',
       gold: 'التوقعات',
       subtitle: 'استمتع بدفء الضيافة السودانية مع خدمة عالمية المستوى.'
@@ -406,6 +493,7 @@ const TRANSLATIONS = {
     booking: {
       roundTrip: 'ذهاب وعودة',
       oneWay: 'ذهاب فقط',
+      multiCity: 'وجهات متعددة',
       adults: 'بالغون',
       children: 'أطفال',
       infants: 'رضع',
@@ -471,7 +559,7 @@ const TRANSLATIONS = {
     journey: {
       title: 'أكمل رحلتك',
       seats: { title: 'اختيار المقاعد', desc: 'اختر مكانك المفضل على الطائرة.' },
-      weight: { title: 'شراء وزن زائد', desc: 'احجز وزنًا إضافيًا مسبقًا بأسعار مخفضة.' },
+      weight: { title: 'شراء وزن زائد', desc: 'احجز وزناً إضافياً مسبقاً بأسعار مخفضة.' },
       guidance: { title: 'إرشادات السفر', desc: 'معلومات أساسية لوجهتك.' },
       manage: { title: 'إدارة الحجز', desc: 'تعديل أو ترقية رحلتك بسهولة.' },
       learn: 'تعرف على المزيد'
@@ -479,7 +567,7 @@ const TRANSLATIONS = {
     upgrade: {
       title: 'ارتقِ برحلتك',
       subtitle: 'عرض محدود',
-      desc: 'قم بالترقية إلى درجة الأعمال مقابل 150 دولارًا إضافيًا فقط واستمتع براحة مميزة ووجبات فاخرة ودخول إلى الصالة.',
+      desc: 'قم بالترقية إلى درجة الأعمال مقابل 150 دولاراً إضافياً فقط واستمتع براحة مميزة ووجبات فاخرة ودخول إلى الصالة.',
       button: 'ترقية الآن',
       no: 'لا شكراً، متابعة'
     },
@@ -492,7 +580,7 @@ const TRANSLATIONS = {
       baggage: { name: 'وزن إضافي', desc: 'أضف قطعة أمتعة إضافية بوزن 23 كجم.' },
       meal: { name: 'وجبة مميزة', desc: 'قم بالترقية إلى مجموعة مختارة من الوجبات الساخنة الفاخرة.' },
       lounge: { name: 'دخول الصالة', desc: 'استرخ في صالة تاركو بيرل قبل رحلتك.' },
-      wifi: { name: 'إنترنت على الطائرة', desc: 'ابق على اتصال بإنترنت عالي السرعة.' }
+      wifi: { name: 'إنتنرت على الطائرة', desc: 'ابق على اتصال بإنترنت عالي السرعة.' }
     },
     features: {
       handBag: { label: 'حقيبة يد 7 كجم', desc: 'احمل حقيبة صغيرة واحدة معك في الكابينة.' },
@@ -503,10 +591,10 @@ const TRANSLATIONS = {
       gourmet: { label: 'وجبات فاخرة', desc: 'عشاء فاخر من عدة أطباق يعده كبار الطهاة.' },
       seat: { label: 'مقعد قياسي', desc: 'مقعد مريح بمساحة أرجل قياسية.' },
       extraLeg: { label: 'مساحة أرجل إضافية', desc: 'مساحة أكبر لتمديد ساقيك أثناء الرحلة.' },
-      lieFlat: { label: 'مقعد يتحول لسرير', desc: 'حول مقعدك إلى سرير مسطح تمامًا لأقصى درجات الراحة.' },
+      lieFlat: { label: 'مقعد يتحول لسرير', desc: 'حول مقعدك إلى سرير مسطح تماماً لأقصى درجات الراحة.' },
       lounge: { label: 'دخول الصالة', desc: 'استرخ في صالات المطار الحصرية لدينا قبل المغادرة.' },
       refundable: { label: 'مسترد بالكامل', desc: 'إلغاء رحلتك في أي وقت واسترداد كامل المبلغ.' },
-      priority: { label: 'أولوية الصعود', desc: 'اصعد إلى الطائرة أولاً واستقر مبكرًا.' }
+      priority: { label: 'أولوية الصعود', desc: 'اصعد إلى الطائرة أولاً واستقر مبكراً.' }
     },
     destinations: {
       title: 'وجهات شعبية',
@@ -516,15 +604,24 @@ const TRANSLATIONS = {
       starting: 'تبدأ من',
       bookNow: 'احجز الآن'
     },
+    destTags: {
+      booked: 'الأكثر حجزاً',
+      value: 'أفضل قيمة',
+      core: 'مركز أساسي',
+      active: 'مركز نشط',
+      popular: 'شائع'
+    },
     excellence: {
       title: 'التميز في الخدمة',
       subtitle: 'ضيافة سودانية حائزة على جوائز',
+      desc: 'نربط السودان بالعالم مع أسطولنا الحديث B737-800NG وكرم الضيافة السوداني العالمي.',
       point1: 'السلامة والراحة أولاً',
       point2: 'طاقم ضيافة محترف',
       point3: 'أسطول حديث'
     }
   }
 };
+
 
 const SEATS: Seat[][] = Array.from({ length: 10 }, (_, row) => 
   ['A', 'B', 'C', 'D', 'E', 'F'].map((col) => ({
@@ -534,50 +631,6 @@ const SEATS: Seat[][] = Array.from({ length: 10 }, (_, row) =>
     label: `${row + 1}${col}`,
   }))
 );
-
-// --- Navigation Data ---
-const NAV_MENU = [
-  {
-    id: 'travel',
-    label: 'Travel',
-    items: [
-      { name: 'Book a Flight', icon: Plane, desc: 'Plan your next adventure with our global network.' },
-      { name: 'Flight Status', icon: Clock, desc: 'Real-time updates on departures and arrivals.' },
-      { name: 'Destinations', icon: Globe, desc: 'Explore where we fly across Africa and the Middle East.' },
-      { name: 'Flight Schedule', icon: Calendar, desc: 'View our seasonal flight operations and timings.' }
-    ]
-  },
-  {
-    id: 'manage',
-    label: 'Manage',
-    items: [
-      { name: 'Check-in', icon: ShieldCheck, desc: 'Speed up your journey with online check-in.' },
-      { name: 'My Trips', icon: Wallet, desc: 'View, modify, or upgrade your existing bookings.' },
-      { name: 'Extra Baggage', icon: Download, desc: 'Pre-book additional baggage at discounted rates.' },
-      { name: 'Refund Request', icon: X, desc: 'Submit and track your ticket refund requests.' }
-    ]
-  },
-  {
-    id: 'experience',
-    label: 'Experience',
-    items: [
-      { name: 'Pearl Lounge', icon: Star, desc: 'Relax in comfort at our exclusive airport lounges.' },
-      { name: 'Fleet', icon: Plane, desc: 'Learn about our modern B737-800NG aircraft.' },
-      { name: 'Cabins', icon: Armchair, desc: 'Discover our Business and Economy Class services.' },
-      { name: 'In-flight Dining', icon: Coffee, desc: 'Taste the best of Sudanese hospitality in the sky.' }
-    ]
-  },
-  {
-    id: 'support',
-    label: 'Support',
-    items: [
-      { name: 'Contact Us', icon: MapPin, desc: 'Get in touch with our local offices worldwide.' },
-      { name: 'FAQs', icon: Zap, desc: 'Find quick answers to common travel questions.' },
-      { name: 'Travel Requirements', icon: ShieldCheck, desc: 'Essential info on visas, health, and documents.' },
-      { name: 'Help Center', icon: Users, desc: 'Comprehensive support for your entire journey.' }
-    ]
-  }
-];
 
 // --- Components ---
 const SafeImage: React.FC<{ 
@@ -651,24 +704,16 @@ const FeatureItem: React.FC<{ feature: FareFeature; lang: Lang }> = ({ feature, 
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
-            className="absolute bottom-full left-0 mb-3 w-56 p-4 bg-tarco-blue text-white text-[11px] rounded-2xl shadow-2xl z-50 leading-relaxed font-medium"
+            className={`absolute bottom-full mb-3 w-56 p-4 bg-tarco-blue text-white text-[11px] rounded-2xl shadow-2xl z-50 leading-relaxed font-medium ${lang === 'ar' ? 'right-0' : 'left-0'}`}
           >
             {featureData?.desc}
-            <div className="absolute top-full left-4 border-[6px] border-transparent border-t-tarco-blue" />
+            <div className={`absolute top-full border-[6px] border-transparent border-t-tarco-blue ${lang === 'ar' ? 'right-4' : 'left-4'}`} />
           </motion.div>
         )}
       </AnimatePresence>
     </li>
   );
 };
-
-// --- Live Stats Ticker ---
-const LIVE_STATS = [
-  { label: 'Flights Today', value: 24, suffix: '', icon: Plane },
-  { label: 'Destinations', value: 18, suffix: '+', icon: Globe },
-  { label: 'Passengers Served', value: 980000, suffix: '+', icon: Users },
-  { label: 'On-Time Rate', value: 94, suffix: '%', icon: TrendingUp },
-];
 
 function useCountUp(target: number, duration = 1500) {
   const [count, setCount] = useState(0);
@@ -696,7 +741,7 @@ function useCountUp(target: number, duration = 1500) {
   return { count, ref };
 }
 
-function StatCard({ stat }: { stat: typeof LIVE_STATS[0]; key?: React.Key }) {
+function StatCard({ stat, lang }: { stat: { label: string; value: number; suffix: string; icon: any }; lang: Lang; key?: any }) {
   const { count, ref } = useCountUp(stat.value);
   const display = stat.value >= 10000
     ? (count >= 1000 ? `${(count / 1000).toFixed(0)}K` : count.toString())
@@ -734,6 +779,57 @@ export default function App() {
   }, []);
 
   const [lang, setLang] = useState<Lang>('en');
+  const t = TRANSLATIONS[lang];
+
+  const navMenu = [
+    {
+      id: 'travel',
+      label: t.navMenu.travel.label,
+      items: [
+        { name: t.navMenu.travel.items.book.name, icon: Plane, desc: t.navMenu.travel.items.book.desc },
+        { name: t.navMenu.travel.items.status.name, icon: Clock, desc: t.navMenu.travel.items.status.desc },
+        { name: t.navMenu.travel.items.destinations.name, icon: Globe, desc: t.navMenu.travel.items.destinations.desc },
+        { name: t.navMenu.travel.items.schedule.name, icon: Calendar, desc: t.navMenu.travel.items.schedule.desc }
+      ]
+    },
+    {
+      id: 'manage',
+      label: t.navMenu.manage.label,
+      items: [
+        { name: t.navMenu.manage.items.checkin.name, icon: ShieldCheck, desc: t.navMenu.manage.items.checkin.desc },
+        { name: t.navMenu.manage.items.trips.name, icon: Wallet, desc: t.navMenu.manage.items.trips.desc },
+        { name: t.navMenu.manage.items.baggage.name, icon: Download, desc: t.navMenu.manage.items.baggage.desc },
+        { name: t.navMenu.manage.items.refund.name, icon: X, desc: t.navMenu.manage.items.refund.desc }
+      ]
+    },
+    {
+      id: 'experience',
+      label: t.navMenu.experience.label,
+      items: [
+        { name: t.navMenu.experience.items.lounge.name, icon: Star, desc: t.navMenu.experience.items.lounge.desc },
+        { name: t.navMenu.experience.items.fleet.name, icon: Plane, desc: t.navMenu.experience.items.fleet.desc },
+        { name: t.navMenu.experience.items.cabins.name, icon: Armchair, desc: t.navMenu.experience.items.cabins.desc },
+        { name: t.navMenu.experience.items.dining.name, icon: Coffee, desc: t.navMenu.experience.items.dining.desc }
+      ]
+    },
+    {
+      id: 'support',
+      label: t.navMenu.support.label,
+      items: [
+        { name: t.navMenu.support.items.contact.name, icon: MapPin, desc: t.navMenu.support.items.contact.desc },
+        { name: t.navMenu.support.items.faqs.name, icon: Zap, desc: t.navMenu.support.items.faqs.desc },
+        { name: t.navMenu.support.items.visa.name, icon: ShieldCheck, desc: t.navMenu.support.items.visa.desc },
+        { name: t.navMenu.support.items.center.name, icon: Users, desc: t.navMenu.support.items.center.desc }
+      ]
+    }
+  ];
+
+  const liveStats = [
+    { label: t.stats.flights, value: 24, suffix: '', icon: Plane },
+    { label: t.stats.destinations, value: 18, suffix: '+', icon: Globe },
+    { label: t.stats.passengers, value: 980000, suffix: '+', icon: Users },
+    { label: t.stats.rate, value: 94, suffix: '%', icon: TrendingUp },
+  ];
   const [assets, setAssets] = useState<Record<string, string>>({});
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -776,7 +872,7 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const t = TRANSLATIONS[lang];
+
   
   const [step, setStep] = useState<Step>('search');
   const [isLoading, setIsLoading] = useState(false);
@@ -862,7 +958,7 @@ export default function App() {
   }, []);
 
   return (
-    <ErrorBoundary>
+    <>
       <div 
         dir={t.dir}
         className={`min-h-screen bg-slate-50 ${t.font} text-slate-900 selection:bg-tarco-red/10 selection:text-tarco-red`}
@@ -951,10 +1047,13 @@ export default function App() {
           className="hidden lg:flex justify-end items-center px-12 gap-8 bg-black/20 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.2em] text-white/60 pointer-events-auto w-full h-10"
           style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
         >
-          <a href="#" className="hover:text-white transition-colors flex items-center gap-2">
+          <button 
+            onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+            className="hover:text-white transition-colors flex items-center gap-2"
+          >
             <Globe size={12} />
-            Country / Language
-          </a>
+            {lang === 'en' ? 'Arabic' : 'English'}
+          </button>
           <a href="#" className="hover:text-white transition-colors flex items-center gap-2">
             <Wallet size={12} />
             Currency: USD
@@ -990,7 +1089,7 @@ export default function App() {
 
             {/* Main Menu Links */}
             <div className="hidden lg:flex gap-8 items-center h-full">
-              {NAV_MENU.map((menu) => (
+              {navMenu.map((menu) => (
                 <div 
                   key={menu.id}
                   className="relative group h-full py-4"
@@ -1009,17 +1108,18 @@ export default function App() {
                   <AnimatePresence>
                     {activeMenu === menu.id && (
                       <motion.div
-                        initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 15, x: lang === 'en' ? -10 : 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, x: lang === 'en' ? -10 : 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 w-[450px] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden p-8 z-[60]"
+                        style={{ originX: lang === 'en' ? 0 : 1 }}
+                        className={`absolute top-full ${lang === 'en' ? 'left-0' : 'right-0'} w-[451px] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden p-8 z-[60]`}
                       >
                         <div className="grid grid-cols-1 gap-6">
                           {menu.items.map((item) => (
                             <button 
                               key={item.name}
-                              className="flex items-start gap-5 p-4 rounded-2xl hover:bg-slate-50 transition-all group/item text-left"
+                              className="flex items-start gap-5 p-4 rounded-2xl hover:bg-slate-50 transition-all group/item text-start"
                             >
                               <div className="mt-1 w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-tarco-blue group-hover/item:bg-tarco-red group-hover/item:text-white transition-colors">
                                 <item.icon size={24} />
@@ -1027,7 +1127,11 @@ export default function App() {
                               <div className="flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm font-black uppercase tracking-widest text-tarco-blue group-hover/item:text-tarco-red transition-colors">{item.name}</span>
-                                  <ChevronRight size={16} className="text-slate-300 group-hover/item:translate-x-1 transition-transform" />
+                                  {lang === 'en' ? (
+                                    <ChevronRight size={16} className="text-slate-300 group-hover/item:translate-x-1 transition-transform" />
+                                  ) : (
+                                    <ChevronLeft size={16} className="text-slate-300 group-hover/item:-translate-x-1 transition-transform" />
+                                  )}
                                 </div>
                                 <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{item.desc}</p>
                               </div>
@@ -1037,7 +1141,7 @@ export default function App() {
                         <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Explore {menu.label}</span>
                           <button className="flex items-center gap-2 px-6 py-2 bg-tarco-blue text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-tarco-red transition-colors">
-                            View All <ExternalLink size={12} />
+                            {lang === 'en' ? 'View All' : 'عرض الكل'} <ExternalLink size={12} className={lang === 'ar' ? 'scale-x-[-1]' : ''} />
                           </button>
                         </div>
                       </motion.div>
@@ -1050,6 +1154,19 @@ export default function App() {
 
           {/* Action Icons & Profile */}
           <div className="flex items-center gap-6 lg:gap-8">
+            {/* Language Switcher */}
+            <button 
+              onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105 ${
+                navScrolled ? 'text-tarco-blue hover:bg-slate-100' : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <Globe size={18} />
+              <span className="text-[10px] font-black tracking-widest uppercase">
+                {lang === 'en' ? 'AR' : 'EN'}
+              </span>
+            </button>
+
             {/* Search Icon */}
             <button 
               onClick={() => setShowSearch(true)}
@@ -1134,7 +1251,7 @@ export default function App() {
             
             <div className="flex-1 overflow-y-auto py-8">
               <div className="px-6 space-y-10">
-                {NAV_MENU.map((menu, idx) => (
+                {navMenu.map((menu, idx) => (
                   <motion.div 
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -1173,7 +1290,7 @@ export default function App() {
                   <Globe size={14} />
                   {lang === 'en' ? 'Arabic' : 'English'}
                 </button>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">USD</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t.utility.currency.split(': ')[1]}</span>
               </div>
             </div>
           </motion.div>
@@ -1183,17 +1300,17 @@ export default function App() {
       {/* Floating Scroll-to-Book CTA */}
       <AnimatePresence>
         {showScrollCTA && step === 'search' && (
-          <motion.button
-            initial={{ opacity: 0, y: 20, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.8 }}
-            onClick={scrollToBooking}
-            className="fixed bottom-8 right-8 z-[150] bg-tarco-red text-white px-6 py-4 rounded-2xl shadow-2xl shadow-red-200 flex items-center gap-3 font-black uppercase tracking-widest text-xs hover:bg-red-600 active:scale-95 transition-colors"
-          >
-            <Zap size={16} fill="currentColor" />
-            Book Now
-            <ChevronDown size={14} className="animate-bounce" />
-          </motion.button>
+            <motion.button
+              initial={{ opacity: 0, y: 20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.8 }}
+              onClick={scrollToBooking}
+              className="fixed bottom-8 right-8 z-[150] bg-tarco-red text-white px-6 py-4 rounded-2xl shadow-2xl shadow-red-200 flex items-center gap-3 font-black uppercase tracking-widest text-xs hover:bg-red-600 active:scale-95 transition-colors"
+            >
+              <Zap size={16} fill="currentColor" />
+              {t.hero.bookNow}
+              <ChevronDown size={14} className="animate-bounce" />
+            </motion.button>
         )}
       </AnimatePresence>
 
@@ -1249,11 +1366,11 @@ export default function App() {
                   >
                     <div className="space-y-4">
                       <h1 className="text-4xl md:text-6xl lg:text-7xl font-extralight tracking-tight text-white leading-[1.1]">
-                        Fly to 150+ destinations,<br />
-                        <span className="font-normal">get fee-free changes</span>
+                        {t.hero.title}<br />
+                        <span className="font-normal">{t.hero.gold}</span>
                       </h1>
                       <p className="text-lg md:text-xl text-white/80 font-light tracking-wide max-w-xl">
-                        Experience world-class hospitality and seamless travel to the heart of Africa and beyond.
+                        {t.hero.subtitle}
                       </p>
                     </div>
                     
@@ -1267,7 +1384,7 @@ export default function App() {
                         onClick={scrollToBooking}
                         className="px-10 py-4 rounded-full border-2 border-white text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-slate-900 transition-all duration-300"
                       >
-                        Start planning
+                        {t.hero.cta}
                       </button>
                     </motion.div>
                   </motion.div>
@@ -1301,7 +1418,7 @@ export default function App() {
                       {activeTab === 'booking' && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
 
-                          {/* ── Row 1: Trip-type radios ── */}
+                          {/* â”€â”€ Row 1: Trip-type radios â”€â”€ */}
                           <div className="flex items-center gap-5 mb-5">
                             {[
                               { label: t.booking.roundTrip, value: 'round' },
@@ -1322,7 +1439,7 @@ export default function App() {
                             ))}
                           </div>
 
-                          {/* ── Row 2: Unified seamless input bar ── */}
+                          {/* â”€â”€ Row 2: Unified seamless input bar â”€â”€ */}
                           <div className="flex flex-col md:flex-row items-stretch rounded-2xl border border-slate-200 bg-slate-50 overflow-visible mb-4 shadow-sm">
 
                             {/* From */}
@@ -1355,7 +1472,7 @@ export default function App() {
                                 onClick={handleSwap}
                                 className="md:hidden w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-tarco-blue border-t border-b border-slate-200"
                               >
-                                <ArrowRightLeft size={14} /> Swap
+                                <ArrowRightLeft size={14} /> {lang === 'en' ? 'Swap' : 'تبديل'}
                               </button>
 
                               <div className="hidden md:block absolute right-0 top-3 bottom-3 w-[1px] bg-slate-200" />
@@ -1377,7 +1494,7 @@ export default function App() {
                               <div className="hidden md:block absolute right-0 top-3 bottom-3 w-[1px] bg-slate-200" />
                             </div>
 
-                            {/* Date Picker trigger (seamless) — calendar renders below as inline block */}
+                            {/* Date Picker trigger (seamless) â€” calendar renders below as inline block */}
                             <div className={`flex-[1.3] relative group ${showCalendar ? 'bg-blue-50/40 rounded-lg' : ''}`}>
                               <HeroDatePicker
                                 departureDate={departureDate}
@@ -1399,10 +1516,10 @@ export default function App() {
                               >
                                 <Users size={18} className="text-tarco-blue flex-shrink-0" />
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">Passengers / Class</span>
+                                  <span className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{lang === 'en' ? 'Passengers / Class' : 'المسافرون / الدرجة'}</span>
                                   <span className="font-semibold text-sm text-slate-800 whitespace-nowrap">
                                     {passengers.adults + passengers.children + passengers.infants}{' '}
-                                    Passenger{passengers.adults + passengers.children + passengers.infants !== 1 ? 's' : ''} Economy
+                                    {lang === 'en' ? (passengers.adults + passengers.children + passengers.infants !== 1 ? 'Passengers' : 'Passenger') : 'مسافر'} {lang === 'en' ? 'Economy' : 'السياحية'}
                                   </span>
                                 </div>
                                 <ChevronDown size={14} className="text-slate-400 ml-auto" />
@@ -1430,14 +1547,14 @@ export default function App() {
                                             </div>
                                             <div>
                                               <p className="text-xs font-bold text-tarco-blue">{p.label}</p>
-                                              <p className="text-[10px] text-slate-400">{p.sub}</p>
+                                              <p className="text-[10px] text-slate-400">{lang === 'en' ? p.sub : (p.id === 'adults' ? '12+ سنة' : p.id === 'children' ? '2-11 سنة' : 'تحت سنتين')}</p>
                                             </div>
                                           </div>
                                           <div className="flex items-center gap-3">
                                             <button
                                               onClick={() => updatePax(p.id as keyof PassengerCount, -1)}
                                               className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 font-bold"
-                                            >−</button>
+                                            >âˆ’</button>
                                             <span className="text-sm font-bold w-4 text-center">{passengers[p.id as keyof PassengerCount]}</span>
                                             <button
                                               onClick={() => updatePax(p.id as keyof PassengerCount, 1)}
@@ -1457,7 +1574,7 @@ export default function App() {
                             </div>
                           </div>
 
-                          {/* ── Inline Calendar (expands booking card) ── */}
+                          {/* â”€â”€ Inline Calendar (expands booking card) â”€â”€ */}
                           {showCalendar && (
                             <InlineCalendar
                               departureDate={departureDate}
@@ -1472,9 +1589,9 @@ export default function App() {
                             />
                           )}
 
-                          {/* ── Row 3: Bottom bar – Promo + Search ── */}
+                          {/* â”€â”€ Row 3: Bottom bar â€“ Promo + Search â”€â”€ */}
                           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            {/* Promo code – subtle text link style */}
+                            {/* Promo code â€“ subtle text link style */}
                             <div className="flex items-center gap-2 group">
                               <Star size={15} className="text-tarco-gold" />
                               <input
@@ -1543,10 +1660,10 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {[
-                      { icon: Armchair, title: 'Seat Selection', desc: 'Pre-book your favorite window or aisle seat.', num: '01' },
-                      { icon: Download, title: 'Buy Weight', desc: 'Avoid over-weight charges by pre-booking baggage.', num: '02' },
-                      { icon: ShieldCheck, title: 'Travel Guidance', desc: 'Up-to-date entry requirements and travel help.', num: '03' },
-                      { icon: Star, title: 'Manage Booking', desc: 'Easy online modifications to your travel itinerary.', num: '04' }
+                      { icon: Armchair, title: t.journey.seats.title, desc: t.journey.seats.desc, num: '01' },
+                      { icon: Download, title: t.journey.weight.title, desc: t.journey.weight.desc, num: '02' },
+                      { icon: ShieldCheck, title: t.journey.guidance.title, desc: t.journey.guidance.desc, num: '03' },
+                      { icon: Star, title: t.journey.manage.title, desc: t.journey.manage.desc, num: '04' }
                     ].map((item, i) => (
                       <motion.div 
                         key={i}
@@ -1567,6 +1684,8 @@ export default function App() {
                   </div>
                 </div>
 
+
+
                 {/* Destination Exploration Carousel */}
                 <div className="py-24 space-y-12 overflow-hidden">
                   <div className="text-center space-y-4">
@@ -1576,11 +1695,11 @@ export default function App() {
                   
                   <div className="flex gap-6 overflow-x-auto pb-12 px-4 no-scrollbar snap-x snap-mandatory">
                     {[
-                      { id: 'riyadh', img: assets['dest_riyadh'] || '/Images/dest_riyadh.jpg', name: 'RIYADH', price: 420, tag: 'Most Booked' },
-                      { id: 'cairo', img: assets['dest_cairo'] || '/Images/dest_cairo.jpg', name: 'CAIRO', price: 290, tag: 'Best Value' },
-                      { id: 'khartoum', img: assets['dest_khartoum'] || '/Images/dest_khartoum.jpg', name: 'KHARTOUM', price: 250, tag: 'Core Hub' },
-                      { id: 'portsudan', img: assets['dest_portsudan'] || '/Images/dest_portsudan.jpg', name: 'PORT SUDAN', price: 220, tag: 'Active Hub' },
-                      { id: 'jeddah', img: assets['dest_jeddah'] || '/Images/dest_jeddah.jpg', name: 'JEDDAH', price: 340, tag: 'Popular' },
+                      { id: 'riyadh', img: assets['dest_riyadh'] || '/Images/dest_riyadh.jpg', name: t.destinations.riyadh, price: 420, tag: t.destTags.booked },
+                      { id: 'cairo', img: assets['dest_cairo'] || '/Images/dest_cairo.jpg', name: t.destinations.cairo, price: 290, tag: t.destTags.value },
+                      { id: 'khartoum', img: assets['dest_khartoum'] || '/Images/dest_khartoum.jpg', name: lang === 'en' ? 'KHARTOUM' : 'الخرطوم', price: 250, tag: t.destTags.core },
+                      { id: 'portsudan', img: assets['dest_portsudan'] || '/Images/dest_portsudan.jpg', name: lang === 'en' ? 'PORT SUDAN' : 'بورتسودان', price: 220, tag: t.destTags.active },
+                      { id: 'jeddah', img: assets['dest_jeddah'] || '/Images/dest_jeddah.jpg', name: lang === 'en' ? 'JEDDAH' : 'جدة', price: 340, tag: t.destTags.popular },
                     ].map((dest) => (
                       <motion.div 
                         key={dest.id}
@@ -1615,6 +1734,16 @@ export default function App() {
                           </motion.button>
                         </div>
                       </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Live Statistics Ticker */}
+                <div className="py-16 bg-tarco-blue rounded-[40px] shadow-2xl overflow-hidden relative">
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
+                  <div className="relative z-10 max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
+                    {liveStats.map((stat, i) => (
+                      <StatCard key={i} stat={stat} lang={lang} />
                     ))}
                   </div>
                 </div>
@@ -1668,7 +1797,7 @@ export default function App() {
                       <div className="w-24 h-1 bg-tarco-red"></div>
                     </div>
                     <button className="text-tarco-red font-black uppercase tracking-widest text-xs hover:underline">
-                      View All Destinations
+                      {lang === 'en' ? 'View All Destinations' : 'عرض كل الوجهات'}
                     </button>
                   </div>
                   
@@ -1736,11 +1865,11 @@ export default function App() {
               <div className="flex justify-between items-end">
                 <div>
                   <h2 className="text-3xl font-bold text-tarco-navy">{t.results.title}</h2>
-                  <p className="text-slate-500">Flight TRC-402 • {from} to {to}</p>
+                  <p className="text-slate-500">Flight TRC-402 â€¢ {from} to {to}</p>
                 </div>
                 <div className="text-right">
                   <span className="text-sm font-bold text-slate-400 uppercase">{t.results.departing}</span>
-                  <p className="font-bold">08:45 AM • 14 Apr</p>
+                  <p className="font-bold">08:45 AM â€¢ 14 Apr</p>
                 </div>
               </div>
 
@@ -2105,7 +2234,7 @@ export default function App() {
                       <p className="font-bold text-tarco-navy">14 APR 26</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Gate</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Gate' : 'البوابة'}</p>
                       <p className="font-bold text-tarco-navy">B12</p>
                     </div>
                     <div>
@@ -2113,7 +2242,7 @@ export default function App() {
                       <p className="font-bold text-tarco-navy">{selectedSeat?.label}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Class</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Class' : 'الدرجة'}</p>
                       <p className="font-bold text-tarco-navy">{selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business}</p>
                     </div>
                   </div>
@@ -2133,7 +2262,7 @@ export default function App() {
                   </button>
                   <button className="w-full bg-white border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm hover:bg-slate-50 transition-colors">
                     <Download size={18} />
-                    Download PDF
+                    {lang === 'en' ? 'Download PDF' : 'تحميل بصيغة PDF'}
                   </button>
                 </div>
               </motion.div>
@@ -2252,36 +2381,36 @@ export default function App() {
               referrerPolicy="no-referrer"
             />
             <div className="flex gap-12 text-xs font-bold uppercase tracking-widest">
-              <a href="#" className="hover:text-tarco-gold transition-colors">Privacy</a>
-              <a href="#" className="hover:text-tarco-gold transition-colors">Terms</a>
-              <a href="#" className="hover:text-tarco-gold transition-colors">Contact</a>
+              <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Privacy' : 'الخصوصية'}</a>
+              <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Terms' : 'الشروط'}</a>
+              <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Contact' : 'اتصل بنا'}</a>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 pt-16 border-t border-white/10">
             <div className="space-y-4">
-              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">About Tarco</h4>
+              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'About Tarco' : 'عن تاركو'}</h4>
               <p className="text-sm text-slate-400 leading-relaxed">
-                Tarco Aviation is a leading airline based in Sudan, committed to providing safe, reliable, and comfortable air travel across Africa and the Middle East.
+                {t.excellence.desc}
               </p>
             </div>
             <div className="space-y-4">
-              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">Our Network</h4>
+              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Network' : 'شبكة وجهاتنا'}</h4>
               <p className="text-sm text-slate-400 leading-relaxed">
-                Connecting major cities including Khartoum, Dubai, Riyadh, Cairo, and Addis Ababa with modern aircraft and exceptional service.
+                {lang === 'en' ? 'Connecting major cities including Khartoum, Dubai, Riyadh, Cairo, and Addis Ababa with modern aircraft and exceptional service.' : 'نربط المدن الكبرى بما في ذلك الخرطوم ودبي والرياض والقاهرة وأديس أبابا بطائرات حديثة وخدمة استثنائية.'}
               </p>
             </div>
             <div className="space-y-4">
-              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">Newsletter</h4>
+              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Newsletter' : 'النشرة البريدية'}</h4>
               <div className="flex gap-2">
-                <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-gold" placeholder="Email Address" />
-                <button className="bg-tarco-red px-4 py-2 rounded-lg font-bold text-xs">Join</button>
+                <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-gold" placeholder={lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'} />
+                <button className="bg-tarco-red px-4 py-2 rounded-lg font-bold text-xs">{lang === 'en' ? 'Join' : 'اشترك'}</button>
               </div>
             </div>
           </div>
           
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-16 border-t border-white/10 text-[10px] text-slate-500 font-medium uppercase tracking-widest">
-            <p>© 2026 {t.brand.first} {t.brand.second}. All rights reserved.</p>
+            <p>آ© 2026 {t.brand.first} {t.brand.second}. All rights reserved.</p>
             <div className="flex items-center gap-6">
               {user?.email === 'YSeddig15@gmail.com' && (
                 <a 
@@ -2300,6 +2429,6 @@ export default function App() {
         </div>
       </footer>
       </div>
-    </ErrorBoundary>
+    </>
   );
 }
