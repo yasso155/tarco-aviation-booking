@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: assets
+    // Document ID: {assetId}
+    // Fields:
+    //   - name: string (required) - Internal name
+    //   - url: string (required, URL) - Storage URL
+    //   - type: string (required, enum: ['image', 'logo'])
+    //   - updatedAt: timestamp (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "YSeddig15@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidAsset(data) {
+      return data.keys().hasAll(['name', 'url', 'type']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.url is string && data.url.matches("^https://.*") &&
+             data.type in ['image', 'logo'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /assets/{assetId} {
+      // Publicly readable for the website to function
+      allow read: if true;
+      
+      // Only admins can manage assets
+      allow create: if isAdmin() && isValidAsset(request.resource.data);
+      allow update: if isAdmin() && isValidAsset(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId && 
+                     (!('role' in request.resource.data) || request.resource.data.role == resource.data.role);
+    }
+  }
+}

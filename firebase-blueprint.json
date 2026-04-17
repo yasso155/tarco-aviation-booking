@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "Asset": {
+      "title": "Brand Asset",
+      "description": "Represents a brand image or logo stored in Firebase Storage.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The internal name of the asset (e.g., hero_addis)." },
+        "url": { "type": "string", "format": "uri", "description": "The public download URL from Firebase Storage." },
+        "type": { "type": "string", "enum": ["image", "logo"], "description": "The type of asset." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last time the URL was updated." }
+      },
+      "required": ["name", "url", "type"]
+    }
+  },
+  "firestore": {
+    "/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Collection of brand assets and their Storage URLs."
+    }
+  }
+}
