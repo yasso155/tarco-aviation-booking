@@ -33,7 +33,9 @@ import {
   Search,
   Menu,
   ExternalLink,
-  ChevronLeft
+  ChevronLeft,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth, signIn, logout } from './firebase';
@@ -192,7 +194,14 @@ const TRANSLATIONS = {
       checkin: 'Check-in',
       manage: 'Manage',
       status: 'Status',
-      login: 'Login'
+      login: 'Login',
+      point3: 'Modern Fleet'
+    },
+    contacts: {
+      headOffice: 'Head Office (Khartoum)',
+      madaniOffice: 'Madani Office',
+      headAddress: 'Omack Street, Khartoum',
+      madaniAddress: 'Shikan Tower, Al-Masah Street'
     },
     steps: {
       search: 'Search',
@@ -330,8 +339,9 @@ const TRANSLATIONS = {
       rate: 'On-Time Rate'
     },
     hero: {
-      title: 'Safety and',
-      gold: 'Smiles',
+      title: 'Where Welcome is Peace',
+      suffix: 'and Destinations are',
+      highlight: 'Safety',
       subtitle: 'Connecting Sudan to the world with our modern B737-800NG fleet and world-class Sudanese hospitality.',
       cta: 'Start planning',
       bookNow: 'Book Now'
@@ -398,6 +408,7 @@ const TRANSLATIONS = {
       point3: 'Modern Fleet'
     }
   },
+
   ar: {
     dir: 'rtl',
     font: 'font-arabic',
@@ -427,8 +438,9 @@ const TRANSLATIONS = {
       rate: 'نسبة الدقة'
     },
     hero: {
-      title: 'سلام',
-      gold: 'وابتسام',
+      title: 'ترحبانكم سلام',
+      suffix: 'ووجهانكم',
+      highlight: 'سلامة',
       subtitle: 'نربط السودان بالعالم مع أسطولنا الحديث B737-800NG وكرم الضيافة السوداني العالمي.',
       cta: 'ابدأ التخطيط',
       bookNow: 'احجز الآن'
@@ -618,9 +630,16 @@ const TRANSLATIONS = {
       point1: 'السلامة والراحة أولاً',
       point2: 'طاقم ضيافة محترف',
       point3: 'أسطول حديث'
+    },
+    contacts: {
+      headOffice: 'المكتب الرئيسي (الخرطوم)',
+      madaniOffice: 'مكتب مدني',
+      headAddress: 'شارع أوماك، الخرطوم',
+      madaniAddress: 'برج شيكان، شارع الماسه'
     }
   }
 };
+
 
 
 const SEATS: Seat[][] = Array.from({ length: 10 }, (_, row) => 
@@ -765,13 +784,13 @@ export default function App() {
   useEffect(() => {
     if (canvasRef.current) {
       const app = new Application(canvasRef.current);
-      app.load('https://prod.spline.design/SzGjXpnJJIkzEyPX/scene.splinecode');
+      app.load('https://prod.spline.design/xK6dU3qCw-vltUIV/scene.splinecode');
     }
   }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      setNavScrolled(window.scrollY > 40);
+      setNavScrolled(window.scrollY > 20);
       setShowScrollCTA(window.scrollY > 120 && window.scrollY < 800);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -1036,46 +1055,18 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Navigation Bar Wrapper */}
-      {/* Utility bar: always fixed at top=0. Main nav positioned below it. On scroll, both shift up together. */}
-      <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
-
-        {/* Utility Bar - always rendered but slides up off-screen when scrolled */}
-        <motion.div
-          animate={{ y: navScrolled ? -40 : 0, opacity: navScrolled ? 0 : 1 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="hidden lg:flex justify-end items-center px-12 gap-8 bg-black/20 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.2em] text-white/60 pointer-events-auto w-full h-10"
-          style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
-        >
-          <button 
-            onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-            className="hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Globe size={12} />
-            {lang === 'en' ? 'Arabic' : 'English'}
-          </button>
-          <a href="#" className="hover:text-white transition-colors flex items-center gap-2">
-            <Wallet size={12} />
-            Currency: USD
-          </a>
-          <a href="#" className="hover:text-white transition-colors">Support</a>
-          <a href="#" className="hover:text-white transition-colors">Tarco Pearl</a>
-        </motion.div>
-
-        {/* Main Nav - positioned 40px below top (under utility bar), slides up to top=0 on scroll */}
-        <motion.nav
-          animate={{ top: navScrolled ? 0 : 40 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className={`absolute left-0 right-0 px-6 lg:px-12 flex justify-between items-center pointer-events-auto ${
-            navScrolled 
-              ? 'py-3 shadow-2xl border-b border-slate-200' 
-              : 'py-4'
-          }`}
-          style={{ 
-            backgroundColor: navScrolled ? 'rgba(255,255,255,0.96)' : 'transparent',
-            backdropFilter: navScrolled ? 'blur(20px)' : 'none',
-          }}
-        >
+      {/* Navigation Bar */}
+      <motion.nav
+        animate={{ 
+          backgroundColor: navScrolled ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0)',
+          backdropFilter: navScrolled ? 'blur(20px)' : 'blur(0px)',
+          paddingTop: navScrolled ? '0.75rem' : '1.25rem',
+          paddingBottom: navScrolled ? '0.75rem' : '1.25rem',
+          borderBottomColor: navScrolled ? 'rgba(226,232,240,1)' : 'rgba(226,232,240,0)',
+        }}
+        initial={false}
+        className="fixed top-0 left-0 right-0 z-[100] px-6 lg:px-12 flex justify-between items-center transition-all duration-500 border-b"
+      >
           {/* Logo Section */}
           <div className="flex items-center gap-16">
             <a href="/" className="relative group">
@@ -1222,8 +1213,6 @@ export default function App() {
             </button>
           </div>
         </motion.nav>
-      </div>
-
       {/* Mobile Navigation Menu */}
       <AnimatePresence>
         {showMobileMenu && (
@@ -1315,7 +1304,7 @@ export default function App() {
       </AnimatePresence>
 
 
-        <div className="pt-[72px]">
+        <div>
         {/* Progress Tracker (only on checkout steps) */}
         {step !== 'search' && (
           <div className="max-w-7xl mx-auto px-4 pt-8">
@@ -1353,8 +1342,8 @@ export default function App() {
               {/* Hero Section - Full Bleed */}
               <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden">
                 <div className="absolute inset-0 bg-slate-900 overflow-hidden">
-                  <canvas ref={canvasRef} id="canvas3d" className="w-full h-full outline-none border-none scale-105"></canvas>
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/40 pointer-events-none z-10" />
+                  <canvas ref={canvasRef} id="canvas3d" className="w-full h-full outline-none border-none"></canvas>
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/40 pointer-events-none z-10" />
                 </div>
 
                 <div className="absolute inset-0 flex flex-col justify-center px-4 md:px-12 lg:px-24 z-20 pointer-events-none">
@@ -1364,12 +1353,19 @@ export default function App() {
                     transition={{ delay: 0.5, duration: 1 }}
                     className="max-w-3xl space-y-8"
                   >
-                    <div className="space-y-4">
-                      <h1 className="text-4xl md:text-6xl lg:text-7xl font-extralight tracking-tight text-white leading-[1.1]">
+                    <div className="space-y-6">
+                      <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.2] text-tarco-blue">
                         {t.hero.title}<br />
-                        <span className="font-normal">{t.hero.gold}</span>
+                        <span className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-2">
+                          {t.hero.suffix}
+                          {t.hero.highlight && (
+                            <span className="bg-tarco-red text-white px-6 py-2 inline-flex items-center justify-center shadow-2xl shadow-red-900/20 rounded-xs">
+                              {t.hero.highlight}
+                            </span>
+                          )}
+                        </span>
                       </h1>
-                      <p className="text-lg md:text-xl text-white/80 font-light tracking-wide max-w-xl">
+                      <p className="text-lg md:text-xl text-slate-700 font-medium tracking-wide max-w-xl opacity-90">
                         {t.hero.subtitle}
                       </p>
                     </div>
@@ -2387,7 +2383,7 @@ export default function App() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 pt-16 border-t border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pt-16 border-t border-white/10">
             <div className="space-y-4">
               <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'About Tarco' : 'عن تاركو'}</h4>
               <p className="text-sm text-slate-400 leading-relaxed">
@@ -2401,6 +2397,37 @@ export default function App() {
               </p>
             </div>
             <div className="space-y-4">
+              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Offices' : 'مكاتبنا'}</h4>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
+                    <MapPin size={10} className="text-tarco-gold" />
+                    {t.contacts.headOffice}
+                  </p>
+                  <p className="text-xs text-slate-400">{t.contacts.headAddress}</p>
+                  <p className="text-[10px] text-slate-500 flex items-center gap-2">
+                    <Mail size={10} />
+                    we.care@tarcoaviation.com
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
+                    <MapPin size={10} className="text-tarco-gold" />
+                    {t.contacts.madaniOffice}
+                  </p>
+                  <p className="text-xs text-slate-400">{t.contacts.madaniAddress}</p>
+                  <p className="text-[10px] text-slate-500 flex items-center gap-2">
+                    <Phone size={10} />
+                    0120011082
+                  </p>
+                  <p className="text-[10px] text-slate-500 flex items-center gap-2">
+                    <Mail size={10} />
+                    madani.office@tarcoaviation.com
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
               <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Newsletter' : 'النشرة البريدية'}</h4>
               <div className="flex gap-2">
                 <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-gold" placeholder={lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'} />
@@ -2410,7 +2437,7 @@ export default function App() {
           </div>
           
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-16 border-t border-white/10 text-[10px] text-slate-500 font-medium uppercase tracking-widest">
-            <p>آ© 2026 {t.brand.first} {t.brand.second}. All rights reserved.</p>
+            <p>© 2026 {t.brand.first} {t.brand.second}. All rights reserved.</p>
             <div className="flex items-center gap-6">
               {user?.email === 'YSeddig15@gmail.com' && (
                 <a 
