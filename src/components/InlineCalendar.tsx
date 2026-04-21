@@ -32,6 +32,7 @@ interface InlineCalendarProps {
   onFlexibleChange: (v: boolean) => void;
   onClose: () => void;
   t: any;
+  lang: string;
 }
 
 export const InlineCalendar: React.FC<InlineCalendarProps> = ({
@@ -44,6 +45,7 @@ export const InlineCalendar: React.FC<InlineCalendarProps> = ({
   onFlexibleChange,
   onClose,
   t,
+  lang,
 }) => {
   const [viewDate, setViewDate] = useState<Date>(departureDate || new Date());
 
@@ -99,10 +101,14 @@ export const InlineCalendar: React.FC<InlineCalendarProps> = ({
       if (isPast) {
         cls += "text-slate-300 cursor-not-allowed";
       } else if (isDeparture || isReturn) {
-        cls += "bg-tarco-blue text-white font-bold cursor-pointer hover:bg-blue-700";
+        cls += "bg-tarco-blue text-white font-bold cursor-pointer hover:bg-blue-700 ";
         if (isRoundTrip && departureDate && returnDate) {
-          wrapCls = isDeparture ? "bg-tarco-blue/10 rounded-l-full" : "bg-tarco-blue/10 rounded-r-full";
-          cls = cls.replace("rounded-full", isDeparture ? "rounded-l-full" : "rounded-r-full");
+          const isRTL = lang === 'ar';
+          const startRounding = isRTL ? "rounded-r-full" : "rounded-l-full";
+          const endRounding = isRTL ? "rounded-l-full" : "rounded-r-full";
+          
+          wrapCls = isDeparture ? `bg-tarco-blue/10 ${startRounding}` : `bg-tarco-blue/10 ${endRounding}`;
+          cls = cls.replace("rounded-full", isDeparture ? startRounding : endRounding);
         }
       } else if (isInRange) {
         cls += "text-tarco-blue font-semibold cursor-pointer hover:bg-tarco-blue/20";

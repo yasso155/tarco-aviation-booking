@@ -41,8 +41,9 @@ export const HeroDatePicker: React.FC<HeroDatePickerProps> = ({
           : 'bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200 hover:border-tarco-blue hover:bg-white'
       }`}
     >
-      {!seamless && <Calendar size={20} className="text-tarco-blue flex-shrink-0 mr-3" />}
-      <div className="flex flex-1 items-center gap-4 min-w-0">
+      <div className="flex items-center gap-3 w-full">
+        <Calendar size={16} strokeWidth={1.5} className="text-slate-400" />
+        <div className="flex flex-1 items-center gap-4 min-w-0">
         <div className="flex flex-col min-w-0">
           <span className="text-[10px] font-bold uppercase text-slate-400 mb-0.5 whitespace-nowrap">
             {t.booking?.departure || "Departure"}
@@ -65,6 +66,7 @@ export const HeroDatePicker: React.FC<HeroDatePickerProps> = ({
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );

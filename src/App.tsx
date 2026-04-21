@@ -5,21 +5,21 @@
 
 import React, { useState, useEffect, useRef, Component, useCallback } from 'react';
 import { Application } from '@splinetool/runtime';
-import { 
-  Plane, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  ArrowRightLeft, 
-  User, 
-  UserRound, 
-  Baby, 
-  ChevronRight, 
-  Check, 
-  Star, 
-  ShieldCheck, 
-  Wifi, 
-  Coffee, 
+import {
+  Plane,
+  MapPin,
+  Calendar,
+  Users,
+  ArrowRightLeft,
+  User,
+  UserRound,
+  Baby,
+  ChevronRight,
+  Check,
+  Star,
+  ShieldCheck,
+  Wifi,
+  Coffee,
   Armchair,
   X,
   QrCode,
@@ -35,18 +35,22 @@ import {
   ExternalLink,
   ChevronLeft,
   Mail,
-  Phone
+  Phone,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth, signIn, logout } from './firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  getDocFromServer, 
-  doc 
+import {
+  collection,
+  onSnapshot,
+  getDocFromServer,
+  doc
 } from 'firebase/firestore';
 import { HeroDatePicker } from './components/HeroDatePicker';
 import { InlineCalendar } from './components/InlineCalendar';
+import { StartupLoader } from './components/StartupLoader';
+import { StepTransition } from './components/StepTransition';
 
 
 
@@ -313,6 +317,7 @@ const TRANSLATIONS = {
       addis: 'Addis Ababa',
       riyadh: 'Riyadh',
       cairo: 'Cairo',
+      asmara: 'Asmara',
       starting: 'Starting from',
       bookNow: 'Book Now'
     },
@@ -339,8 +344,8 @@ const TRANSLATIONS = {
       rate: 'On-Time Rate'
     },
     hero: {
-      title: 'Where Welcome is Peace',
-      suffix: 'and Destinations are',
+      title: 'Welcome with peace.',
+      suffix: 'Travel',
       highlight: 'Safety',
       subtitle: 'Connecting Sudan to the world with our modern B737-800NG fleet and world-class Sudanese hospitality.',
       cta: 'Start planning',
@@ -438,8 +443,8 @@ const TRANSLATIONS = {
       rate: 'نسبة الدقة'
     },
     hero: {
-      title: 'ترحبانكم سلام',
-      suffix: 'ووجهانكم',
+      title: 'ترحابكم سلام',
+      suffix: 'و وجهاتكم',
       highlight: 'سلامة',
       subtitle: 'نربط السودان بالعالم مع أسطولنا الحديث B737-800NG وكرم الضيافة السوداني العالمي.',
       cta: 'ابدأ التخطيط',
@@ -613,6 +618,7 @@ const TRANSLATIONS = {
       addis: 'أديس أبابا',
       riyadh: 'الرياض',
       cairo: 'القاهرة',
+      asmara: 'أسمرا',
       starting: 'تبدأ من',
       bookNow: 'احجز الآن'
     },
@@ -642,7 +648,7 @@ const TRANSLATIONS = {
 
 
 
-const SEATS: Seat[][] = Array.from({ length: 10 }, (_, row) => 
+const SEATS: Seat[][] = Array.from({ length: 10 }, (_, row) =>
   ['A', 'B', 'C', 'D', 'E', 'F'].map((col) => ({
     id: `${row + 1}${col}`,
     type: Math.random() > 0.8 ? 'occupied' : 'available',
@@ -652,10 +658,10 @@ const SEATS: Seat[][] = Array.from({ length: 10 }, (_, row) =>
 );
 
 // --- Components ---
-const SafeImage: React.FC<{ 
-  src: string; 
-  alt: string; 
-  className?: string; 
+const SafeImage: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
   fallbackSrc?: string;
   referrerPolicy?: React.HTMLAttributeReferrerPolicy;
 }> = ({ src, alt, className, fallbackSrc, referrerPolicy = "no-referrer" }) => {
@@ -683,7 +689,7 @@ const SafeImage: React.FC<{
           <Plane className="text-slate-300 animate-bounce" size={24} />
         </div>
       )}
-      
+
       {status === 'error' ? (
         <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center text-slate-400 p-4 text-center">
           <MapPin size={32} className="mb-2 opacity-20" />
@@ -709,14 +715,14 @@ const FeatureItem: React.FC<{ feature: FareFeature; lang: Lang }> = ({ feature, 
   const featureData = t.features[feature.key as keyof typeof t.features];
 
   return (
-    <li 
+    <li
       className="relative flex items-center gap-3 text-sm text-slate-600 cursor-help"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Check size={16} className="text-emerald-500 flex-shrink-0" />
       <span>{featureData?.label || feature.key}</span>
-      
+
       <AnimatePresence>
         {isHovered && (
           <motion.div
@@ -852,6 +858,29 @@ export default function App() {
   const [assets, setAssets] = useState<Record<string, string>>({});
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [step, setStep] = useState<Step>('search');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAppLoaded, setIsAppLoaded] = useState(false);
+  const [nextStepId, setNextStepId] = useState<Step | null>(null);
+  const [activeTab, setActiveTab] = useState<'booking' | 'manage' | 'checkin'>('booking');
+  const [from, setFrom] = useState('Khartoum (KRT)');
+  const [to, setTo] = useState('Dubai (DXB)');
+  const [isLiveSearchOpen, setIsLiveSearchOpen] = useState(false);
+  const [isBookingFocused, setIsBookingFocused] = useState(false);
+  const [isRoundTrip, setIsRoundTrip] = useState(true);
+  const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
+  const [returnDate, setReturnDate] = useState<Date | null>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+  const [isFlexibleDates, setIsFlexibleDates] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [passengers, setPassengers] = useState<PassengerCount>({ adults: 1, children: 0, infants: 0 });
+  const [showPaxDropdown, setShowPaxDropdown] = useState(false);
+  const [selectedFare, setSelectedFare] = useState<Fare | null>(null);
+  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   // Test Connection & Auth Readiness
   useEffect(() => {
@@ -859,9 +888,7 @@ export default function App() {
       try {
         await getDocFromServer(doc(db, 'test', 'connection'));
       } catch (error) {
-        if (error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Please check your Firebase configuration.");
-        }
+        console.error("Please check your Firebase configuration.");
       }
     }
     testConnection();
@@ -891,28 +918,6 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-
-  
-  const [step, setStep] = useState<Step>('search');
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'booking' | 'manage' | 'checkin'>('booking');
-  const [from, setFrom] = useState('Khartoum (KRT)');
-  const [to, setTo] = useState('Dubai (DXB)');
-  const [isRoundTrip, setIsRoundTrip] = useState(true);
-  const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
-  const [returnDate, setReturnDate] = useState<Date | null>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
-  const [isFlexibleDates, setIsFlexibleDates] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [passengers, setPassengers] = useState<PassengerCount>({ adults: 1, children: 0, infants: 0 });
-  const [showPaxDropdown, setShowPaxDropdown] = useState(false);
-  const [selectedFare, setSelectedFare] = useState<Fare | null>(null);
-  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-
   // Auto-scroll to the calendar when it opens
   useEffect(() => {
     if (showCalendar && bookingRef.current) {
@@ -935,24 +940,31 @@ export default function App() {
   };
 
   const nextStep = () => {
+    let nextS: Step = 'results';
+    if (step === 'search') nextS = 'results';
+    else if (step === 'results') nextS = 'services';
+    else if (step === 'services') nextS = 'seats';
+    else if (step === 'seats') {
+      if (!showUpgradeModal && selectedFare?.id !== 'business') {
+        setShowUpgradeModal(true);
+        return;
+      } else {
+        nextS = 'success';
+      }
+    }
+
+    setNextStepId(nextS);
     setIsLoading(true);
+    
     setTimeout(() => {
       setIsLoading(false);
-      if (step === 'search') setStep('results');
-      else if (step === 'results') setStep('services');
-      else if (step === 'services') setStep('seats');
-      else if (step === 'seats') {
-        if (!showUpgradeModal && selectedFare?.id !== 'business') {
-          setShowUpgradeModal(true);
-        } else {
-          setStep('success');
-        }
-      }
-    }, 800);
+      setStep(nextS);
+      setNextStepId(null);
+    }, 1500); // Premium transition duration to allow for animation reveal
   };
 
   const toggleService = (id: string) => {
-    setSelectedServices(prev => 
+    setSelectedServices(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
   };
@@ -978,101 +990,92 @@ export default function App() {
 
   return (
     <>
-      <div 
-        dir={t.dir}
-        className={`min-h-screen bg-slate-50 ${t.font} text-slate-900 selection:bg-tarco-red/10 selection:text-tarco-red`}
-      >
-      {/* Loading Overlay */}
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-6"
-          >
-            <div className="relative w-24 h-24">
-              <motion.div 
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 border-4 border-slate-100 border-t-tarco-red rounded-full"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Plane className="text-tarco-blue animate-pulse" size={32} />
-              </div>
-            </div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-tarco-blue">{t.steps.search}...</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Search Overlay */}
-      <AnimatePresence>
-        {showSearch && (
+      <AnimatePresence mode="wait">
+        {!isAppLoaded ? (
+          <StartupLoader key="startup" onComplete={() => setIsAppLoaded(true)} />
+        ) : (
           <motion.div
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            className="fixed inset-0 z-[200] bg-tarco-blue/90 flex flex-col items-center justify-center p-6"
+            key="main-app"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            dir={t.dir}
+            className={`min-h-screen bg-slate-50 ${t.font} text-slate-900 selection:bg-tarco-red/10 selection:text-tarco-red`}
           >
-            <button 
-              onClick={() => setShowSearch(false)}
-              className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
-            >
-              <X size={40} strokeWidth={1} />
-            </button>
-            <div className="w-full max-w-4xl space-y-12">
-              <div className="space-y-4 text-center">
-                <h2 className="text-4xl md:text-6xl font-extralight text-white tracking-tight">Search Tarco Aviation</h2>
-                <p className="text-white/40 text-lg">Find flights, destinations, and travel information.</p>
-              </div>
-              <div className="relative group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-tarco-gold group-focus-within:scale-110 transition-transform" size={32} />
-                <input 
-                  autoFocus
-                  type="text" 
-                  placeholder="Where would you like to go?"
-                  className="w-full bg-white/5 border-b-2 border-white/10 py-8 pl-20 pr-8 text-3xl md:text-5xl font-light text-white outline-none focus:border-tarco-gold transition-colors placeholder:text-white/20"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-                {['Popular Destinations', 'Flight Status', 'Travel Requirements'].map((cat) => (
-                  <div key={cat} className="space-y-4">
-                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-gold">{cat}</h3>
-                    <div className="flex flex-col gap-2">
-                      {[1, 2, 3].map(i => (
-                        <button key={i} className="text-left text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group">
-                          <ArrowRightLeft size={16} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                          {cat === 'Popular Destinations' ? ['Dubai (DXB)', 'Cairo (CAI)', 'Riyadh (RUH)'][i-1] : cat + ' Option ' + i}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {/* Step Transition Overlay */}
+            <AnimatePresence>
+              {isLoading && nextStepId && (
+                <StepTransition nextStep={nextStepId} lang={lang} />
+              )}
+            </AnimatePresence>
 
-      {/* Navigation Bar */}
-      <motion.nav
-        animate={{ 
-          backgroundColor: navScrolled ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0)',
-          backdropFilter: navScrolled ? 'blur(20px)' : 'blur(0px)',
-          paddingTop: navScrolled ? '0.75rem' : '1.25rem',
-          paddingBottom: navScrolled ? '0.75rem' : '1.25rem',
-          borderBottomColor: navScrolled ? 'rgba(226,232,240,1)' : 'rgba(226,232,240,0)',
-        }}
-        initial={false}
-        className="fixed top-0 left-0 right-0 z-[100] px-6 lg:px-12 flex justify-between items-center transition-all duration-500 border-b"
-      >
+            {/* Search Overlay */}
+            <AnimatePresence>
+          {showSearch && (
+            <motion.div
+              initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+              animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
+              exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+              className="fixed inset-0 z-[200] bg-tarco-blue/90 flex flex-col items-center justify-center p-6"
+            >
+              <button
+                onClick={() => setShowSearch(false)}
+                className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
+              >
+                <X size={40} strokeWidth={1} />
+              </button>
+              <div className="w-full max-w-4xl space-y-12">
+                <div className="space-y-4 text-center">
+                  <h2 className="text-4xl md:text-6xl font-extralight text-white tracking-tight">Search Tarco Aviation</h2>
+                  <p className="text-white/40 text-lg">Find flights, destinations, and travel information.</p>
+                </div>
+                <div className="relative group">
+                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-tarco-gold group-focus-within:scale-110 transition-transform" size={32} />
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Where would you like to go?"
+                    className="w-full bg-white/5 border-b-2 border-white/10 py-8 pl-20 pr-8 text-3xl md:text-5xl font-light text-white outline-none focus:border-tarco-gold transition-colors placeholder:text-white/20"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
+                  {['Popular Destinations', 'Flight Status', 'Travel Requirements'].map((cat) => (
+                    <div key={cat} className="space-y-4">
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-gold">{cat}</h3>
+                      <div className="flex flex-col gap-2">
+                        {[1, 2, 3].map(i => (
+                          <button key={i} className="text-left text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group">
+                            <ArrowRightLeft size={16} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                            {cat === 'Popular Destinations' ? ['Dubai (DXB)', 'Cairo (CAI)', 'Riyadh (RUH)'][i - 1] : cat + ' Option ' + i}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Navigation Bar */}
+        <motion.nav
+          animate={{
+            backgroundColor: navScrolled ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0)',
+            backdropFilter: navScrolled ? 'blur(20px)' : 'blur(0px)',
+            paddingTop: navScrolled ? '0.75rem' : '1.25rem',
+            paddingBottom: navScrolled ? '0.75rem' : '1.25rem',
+            borderBottomColor: navScrolled ? 'rgba(226,232,240,1)' : 'rgba(226,232,240,0)',
+          }}
+          initial={false}
+          className="fixed top-0 left-0 right-0 z-[100] px-6 lg:px-12 flex justify-between items-center transition-all duration-500 border-b"
+        >
           {/* Logo Section */}
           <div className="flex items-center gap-16">
             <a href="/" className="relative group">
-              <SafeImage 
-                src={assets['logo_main'] || "/Images/logo_main.png"} 
-                alt="Tarco Aviation" 
+              <SafeImage
+                src={assets['logo_main'] || "/Images/logo_main.png"}
+                alt="Tarco Aviation"
                 className={`h-10 w-32 md:h-12 md:w-40 transition-all duration-500 ${!navScrolled ? 'brightness-0 invert' : ''}`}
                 fallbackSrc="/Images/logo_main.png"
               />
@@ -1081,16 +1084,15 @@ export default function App() {
             {/* Main Menu Links */}
             <div className="hidden lg:flex gap-8 items-center h-full">
               {navMenu.map((menu) => (
-                <div 
+                <div
                   key={menu.id}
                   className="relative group h-full py-4"
                   onMouseEnter={() => setActiveMenu(menu.id)}
                   onMouseLeave={() => setActiveMenu(null)}
                 >
-                  <button 
-                    className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-tarco-red ${
-                      navScrolled ? 'text-tarco-blue' : 'text-white'
-                    }`}
+                  <button
+                    className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-tarco-red ${navScrolled ? 'text-tarco-blue' : 'text-white'
+                      }`}
                   >
                     {menu.label}
                     <ChevronDown size={14} className={`transition-transform duration-300 ${activeMenu === menu.id ? 'rotate-180 text-tarco-red' : ''}`} />
@@ -1108,7 +1110,7 @@ export default function App() {
                       >
                         <div className="grid grid-cols-1 gap-6">
                           {menu.items.map((item) => (
-                            <button 
+                            <button
                               key={item.name}
                               className="flex items-start gap-5 p-4 rounded-2xl hover:bg-slate-50 transition-all group/item text-start"
                             >
@@ -1146,11 +1148,10 @@ export default function App() {
           {/* Action Icons & Profile */}
           <div className="flex items-center gap-6 lg:gap-8">
             {/* Language Switcher */}
-            <button 
+            <button
               onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105 ${
-                navScrolled ? 'text-tarco-blue hover:bg-slate-100' : 'text-white hover:bg-white/10'
-              }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105 ${navScrolled ? 'text-tarco-blue hover:bg-slate-100' : 'text-white hover:bg-white/10'
+                }`}
             >
               <Globe size={18} />
               <span className="text-[10px] font-black tracking-widest uppercase">
@@ -1159,11 +1160,10 @@ export default function App() {
             </button>
 
             {/* Search Icon */}
-            <button 
+            <button
               onClick={() => setShowSearch(true)}
-              className={`p-2 rounded-full transition-all hover:scale-110 ${
-                navScrolled ? 'text-tarco-blue hover:bg-slate-100' : 'text-white hover:bg-white/10'
-              }`}
+              className={`p-2 rounded-full transition-all hover:scale-110 ${navScrolled ? 'text-tarco-blue hover:bg-slate-100' : 'text-white hover:bg-white/10'
+                }`}
             >
               <Search size={22} />
             </button>
@@ -1177,7 +1177,7 @@ export default function App() {
                   </div>
                   <div className="flex flex-col">
                     <span className={`text-[10px] font-black uppercase tracking-widest ${navScrolled ? 'text-tarco-blue' : 'text-white'}`}>Logged In</span>
-                    <button 
+                    <button
                       onClick={() => logout()}
                       className="text-[10px] font-bold text-tarco-red hover:underline decoration-2 underline-offset-4 text-left"
                     >
@@ -1186,15 +1186,14 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => signIn()}
-                  className={`flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl ${
-                    navScrolled 
-                      ? 'bg-tarco-red text-white shadow-red-900/10' 
+                  className={`flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl ${navScrolled
+                      ? 'bg-tarco-red text-white shadow-red-900/10'
                       : 'bg-white text-tarco-blue shadow-black/10'
-                  }`}
+                    }`}
                 >
                   <UserRound size={16} />
                   {t.nav.login}
@@ -1203,92 +1202,91 @@ export default function App() {
             </div>
 
             {/* Mobile Menu Button */}
-            <button 
+            <button
               onClick={() => setShowMobileMenu(true)}
-              className={`lg:hidden p-2 rounded-xl border-2 ${
-                navScrolled ? 'border-slate-100 text-tarco-blue' : 'border-white/20 text-white'
-              }`}
+              className={`lg:hidden p-2 rounded-xl border-2 ${navScrolled ? 'border-slate-100 text-tarco-blue' : 'border-white/20 text-white'
+                }`}
             >
               <Menu size={24} />
             </button>
           </div>
         </motion.nav>
-      {/* Mobile Navigation Menu */}
-      <AnimatePresence>
-        {showMobileMenu && (
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[300] bg-white flex flex-col"
-          >
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <SafeImage 
-                src={assets['logo_main'] || "/Images/logo_main.png"} 
-                alt="Tarco Aviation" 
-                className="h-8 w-24"
-                fallbackSrc="/Images/logo_main.png"
-              />
-              <button 
-                onClick={() => setShowMobileMenu(false)}
-                className="p-2 bg-slate-100 rounded-full text-slate-600"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto py-8">
-              <div className="px-6 space-y-10">
-                {navMenu.map((menu, idx) => (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * idx }}
-                    key={menu.id} 
-                    className="space-y-4"
-                  >
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-tarco-gold">{menu.label}</h3>
-                    <div className="flex flex-col gap-6">
-                      {menu.items.map((item) => (
-                        <button key={item.name} className="flex items-center gap-4 text-left group">
-                          <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-tarco-blue group-hover:bg-tarco-red group-hover:text-white transition-colors">
-                            <item.icon size={20} />
-                          </div>
-                          <span className="text-xl font-light text-slate-900 group-hover:text-tarco-red transition-colors">{item.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-4">
-              <button 
-                onClick={() => signIn()}
-                className="w-full bg-tarco-blue text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-900/20"
-              >
-                {t.nav.login}
-              </button>
-              <div className="flex items-center justify-between px-2">
-                <button 
-                  onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-                  className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"
+        {/* Mobile Navigation Menu */}
+        <AnimatePresence>
+          {showMobileMenu && (
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 z-[300] bg-white flex flex-col"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                <SafeImage
+                  src={assets['logo_main'] || "/Images/logo_main.png"}
+                  alt="Tarco Aviation"
+                  className="h-8 w-24"
+                  fallbackSrc="/Images/logo_main.png"
+                />
+                <button
+                  onClick={() => setShowMobileMenu(false)}
+                  className="p-2 bg-slate-100 rounded-full text-slate-600"
                 >
-                  <Globe size={14} />
-                  {lang === 'en' ? 'Arabic' : 'English'}
+                  <X size={24} />
                 </button>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t.utility.currency.split(': ')[1]}</span>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Floating Scroll-to-Book CTA */}
-      <AnimatePresence>
-        {showScrollCTA && step === 'search' && (
+              <div className="flex-1 overflow-y-auto py-8">
+                <div className="px-6 space-y-10">
+                  {navMenu.map((menu, idx) => (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * idx }}
+                      key={menu.id}
+                      className="space-y-4"
+                    >
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-tarco-gold">{menu.label}</h3>
+                      <div className="flex flex-col gap-6">
+                        {menu.items.map((item) => (
+                          <button key={item.name} className="flex items-center gap-4 text-left group">
+                            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-tarco-blue group-hover:bg-tarco-red group-hover:text-white transition-colors">
+                              <item.icon size={20} />
+                            </div>
+                            <span className="text-xl font-light text-slate-900 group-hover:text-tarco-red transition-colors">{item.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-4">
+                <button
+                  onClick={() => signIn()}
+                  className="w-full bg-tarco-blue text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-900/20"
+                >
+                  {t.nav.login}
+                </button>
+                <div className="flex items-center justify-between px-2">
+                  <button
+                    onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+                    className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"
+                  >
+                    <Globe size={14} />
+                    {lang === 'en' ? 'Arabic' : 'English'}
+                  </button>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t.utility.currency.split(': ')[1]}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Floating Scroll-to-Book CTA */}
+        <AnimatePresence>
+          {showScrollCTA && step === 'search' && (
             <motion.button
               initial={{ opacity: 0, y: 20, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1300,110 +1298,130 @@ export default function App() {
               {t.hero.bookNow}
               <ChevronDown size={14} className="animate-bounce" />
             </motion.button>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
 
 
         <div>
-        {/* Progress Tracker (only on checkout steps) */}
-        {step !== 'search' && (
-          <div className="max-w-7xl mx-auto px-4 pt-8">
-            <div className="flex justify-center">
-              <div className="flex items-center gap-4 bg-white px-8 py-4 rounded-2xl shadow-sm border border-slate-100">
-                {steps.map((s, i) => {
-                  const isActive = s.id === step;
-                  const isPast = steps.findIndex(x => x.id === step) > i;
-                  return (
-                    <React.Fragment key={s.id}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${isActive ? 'bg-tarco-red text-white shadow-lg shadow-red-200 scale-110' : isPast ? 'bg-tarco-blue text-white' : 'bg-slate-100 text-slate-400'}`}>
-                          {isPast ? <Check size={14} /> : <s.icon size={14} />}
+          {/* Progress Tracker (only on checkout steps) */}
+          {step !== 'search' && (
+            <div className="max-w-7xl mx-auto px-4 pt-8">
+              <div className="flex justify-center">
+                <div className="flex items-center gap-4 bg-white px-8 py-4 rounded-2xl shadow-sm border border-slate-100">
+                  {steps.map((s, i) => {
+                    const isActive = s.id === step;
+                    const isPast = steps.findIndex(x => x.id === step) > i;
+                    return (
+                      <React.Fragment key={s.id}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${isActive ? 'bg-tarco-red text-white shadow-lg shadow-red-200 scale-110' : isPast ? 'bg-tarco-blue text-white' : 'bg-slate-100 text-slate-400'}`}>
+                            {isPast ? <Check size={14} /> : <s.icon size={14} />}
+                          </div>
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-tarco-blue' : 'text-slate-400'}`}>{s.label}</span>
                         </div>
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-tarco-blue' : 'text-slate-400'}`}>{s.label}</span>
-                      </div>
-                      {i < steps.length - 1 && <div className={`w-8 h-[2px] rounded-full transition-colors duration-500 ${isPast ? 'bg-tarco-blue' : 'bg-slate-100'}`} />}
-                    </React.Fragment>
-                  );
-                })}
+                        {i < steps.length - 1 && <div className={`w-8 h-[2px] rounded-full transition-colors duration-500 ${isPast ? 'bg-tarco-blue' : 'bg-slate-100'}`} />}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <AnimatePresence mode="wait">
-          {step === 'search' && (
-            <motion.div
-              key="search"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="relative"
-            >
-              {/* Hero Section - Full Bleed */}
-              <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden">
-                <div className="absolute inset-0 bg-slate-900 overflow-hidden">
-                  <canvas ref={canvasRef} id="canvas3d" className="w-full h-full outline-none border-none"></canvas>
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/40 pointer-events-none z-10" />
+          <AnimatePresence mode="wait">
+            {step === 'search' && (
+              <motion.div
+                key="search"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="relative"
+              >
+                {/* Hero Section - Full Bleed */}
+                <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden">
+                  <div className="absolute inset-0 bg-slate-900 overflow-hidden">
+                    <canvas ref={canvasRef} id="canvas3d" className="w-full h-full outline-none border-none"></canvas>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/40 pointer-events-none z-10" />
+                  </div>
+
+                  <div className="absolute inset-0 flex flex-col justify-center px-4 md:px-12 lg:px-24 z-20 pointer-events-none">
+                    <motion.div
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, duration: 1 }}
+                      className="max-w-3xl space-y-8"
+                    >
+                      <div className="space-y-6">
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.2] text-tarco-blue">
+                          {t.hero.title}<br />
+                          <span className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-2">
+                            {t.hero.suffix}
+                            {t.hero.highlight && (
+                              <span className="bg-tarco-red text-white px-6 py-2 inline-flex items-center justify-center shadow-2xl shadow-red-900/20 rounded-xs">
+                                {t.hero.highlight}
+                              </span>
+                            )}
+                          </span>
+                        </h1>
+                        <p className="text-lg md:text-xl text-slate-700 font-medium tracking-wide max-w-xl opacity-90">
+                          {t.hero.subtitle}
+                        </p>
+                      </div>
+
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1.2 }}
+                        className="flex items-center gap-6 pointer-events-auto"
+                      >
+                        <button
+                          onClick={scrollToBooking}
+                          className="px-10 py-4 rounded-full border-2 border-white text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-slate-900 transition-all duration-300"
+                        >
+                          {t.hero.cta}
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                  </div>
                 </div>
 
-                <div className="absolute inset-0 flex flex-col justify-center px-4 md:px-12 lg:px-24 z-20 pointer-events-none">
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 1 }}
-                    className="max-w-3xl space-y-8"
-                  >
-                    <div className="space-y-6">
-                      <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.2] text-tarco-blue">
-                        {t.hero.title}<br />
-                        <span className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-2">
-                          {t.hero.suffix}
-                          {t.hero.highlight && (
-                            <span className="bg-tarco-red text-white px-6 py-2 inline-flex items-center justify-center shadow-2xl shadow-red-900/20 rounded-xs">
-                              {t.hero.highlight}
-                            </span>
-                          )}
-                        </span>
-                      </h1>
-                      <p className="text-lg md:text-xl text-slate-700 font-medium tracking-wide max-w-xl opacity-90">
-                        {t.hero.subtitle}
-                      </p>
-                    </div>
-                    
+                {/* Focus Mode Backdrop */}
+                <AnimatePresence>
+                  {isBookingFocused && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 1.2 }}
-                      className="flex items-center gap-6 pointer-events-auto"
-                    >
-                      <button 
-                        onClick={scrollToBooking}
-                        className="px-10 py-4 rounded-full border-2 border-white text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-slate-900 transition-all duration-300"
-                      >
-                        {t.hero.cta}
-                      </button>
-                    </motion.div>
-                  </motion.div>
-                </div>
-              </div>
+                      exit={{ opacity: 0 }}
+                      onClick={() => setIsBookingFocused(false)}
+                      className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-40"
+                    />
+                  )}
+                </AnimatePresence>
 
-              {/* Sticky Booking Card */}
-              <div ref={bookingRef} className="relative z-30 -mt-24 max-w-7xl mx-auto px-4">
-                <div className="bg-white rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] border border-slate-100 overflow-hidden">
+                {/* Sticky Booking Card */}
+                <div 
+                  ref={bookingRef} 
+                  className={`relative z-50 -mt-24 max-w-7xl mx-auto px-4 transition-all duration-500 ${isBookingFocused ? 'scale-[1.02]' : ''}`}
+                >
+                  <div 
+                    className={`bg-white rounded-2xl border border-slate-100 overflow-visible transition-shadow duration-500 ${
+                      isBookingFocused ? 'shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)]' : 'shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)]'
+                    }`}
+                    onClick={() => setIsBookingFocused(true)}
+                  >
 
                     {/* Main Tabs - styled like Qatar Airways / Modern Tabs */}
-                    <div className="flex bg-slate-100 relative">
-                      {[{id:'booking', icon: Plane, label: t.nav.book}, {id:'manage', icon: ShieldCheck, label: t.booking.manage}, {id:'checkin', icon: Check, label: t.booking.checkin}].map((tab) => (
+                    <div className="flex bg-slate-100 relative rounded-t-2xl overflow-hidden">
+                      {[{ id: 'booking', icon: Plane, label: t.nav.book }, { id: 'manage', icon: ShieldCheck, label: t.booking.manage }, { id: 'checkin', icon: Check, label: t.booking.checkin }].map((tab) => (
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id as any)}
-                          className={`flex-1 py-5 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all relative ${
-                            activeTab === tab.id 
-                              ? 'bg-white text-tarco-red' 
+                          className={`flex-1 py-5 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === tab.id
+                              ? 'bg-white text-tarco-red'
                               : 'text-slate-500 hover:bg-slate-200/50 hover:text-slate-700'
-                          }`}
+                            }`}
                         >
-                          <tab.icon size={16} className={activeTab === tab.id ? 'text-tarco-red' : 'text-slate-400'} />
+                          <tab.icon size={16} strokeWidth={1.5} className={activeTab === tab.id ? 'text-tarco-red' : 'text-slate-400'} />
                           {tab.label}
                           {activeTab === tab.id && <div className="absolute top-0 left-0 right-0 h-1 bg-tarco-red" />}
                         </button>
@@ -1441,9 +1459,11 @@ export default function App() {
                             {/* From */}
                             <div className="flex-1 relative group">
                               <div className="flex items-center gap-3 px-4 py-3 h-full">
-                                <MapPin size={18} className="text-tarco-blue flex-shrink-0" />
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t.booking.from}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <MapPin size={16} strokeWidth={1.5} className="text-slate-400" />
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.booking.from}</span>
+                                  </div>
                                   <input
                                     value={from}
                                     onChange={(e) => setFrom(e.target.value)}
@@ -1453,15 +1473,15 @@ export default function App() {
                               </div>
 
                               {/* Swap button sits between From and To */}
-                              <motion.button
-                                whileHover={{ rotate: 180, scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                transition={{ type: 'spring', stiffness: 300 }}
-                                onClick={handleSwap}
-                                className="absolute right-[-16px] top-1/2 -translate-y-1/2 z-20 bg-white border border-slate-200 shadow-md p-1.5 rounded-full text-tarco-blue hidden md:flex items-center justify-center hover:bg-tarco-blue hover:text-white transition-colors"
-                              >
-                                <ArrowRightLeft size={14} />
-                              </motion.button>
+                               <motion.button
+                                 whileHover={{ rotate: 180, scale: 1.1 }}
+                                 whileTap={{ scale: 0.9 }}
+                                 transition={{ type: 'spring', stiffness: 300 }}
+                                 onClick={handleSwap}
+                                 className={`absolute ${lang === 'ar' ? 'left-[-16px]' : 'right-[-16px]'} top-1/2 -translate-y-1/2 z-20 bg-white border border-slate-200 shadow-md p-1.5 rounded-full text-tarco-blue hidden md:flex items-center justify-center hover:bg-tarco-blue hover:text-white transition-colors`}
+                               >
+                                 <ArrowRightLeft size={14} strokeWidth={1.5} />
+                               </motion.button>
 
                               {/* Mobile swap button */}
                               <button
@@ -1477,9 +1497,11 @@ export default function App() {
                             {/* To */}
                             <div className="flex-1 relative group">
                               <div className="flex items-center gap-3 px-4 py-3 h-full">
-                                <MapPin size={18} className="text-tarco-red flex-shrink-0" />
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{t.booking.to}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <MapPin size={16} strokeWidth={1.5} className="text-tarco-red" />
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.booking.to}</span>
+                                  </div>
                                   <input
                                     value={to}
                                     onChange={(e) => setTo(e.target.value)}
@@ -1510,15 +1532,17 @@ export default function App() {
                                 onClick={() => setShowPaxDropdown(!showPaxDropdown)}
                                 className="flex items-center gap-3 px-4 py-3 h-full cursor-pointer"
                               >
-                                <Users size={18} className="text-tarco-blue flex-shrink-0" />
-                                <div className="flex flex-col">
-                                  <span className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">{lang === 'en' ? 'Passengers / Class' : 'المسافرون / الدرجة'}</span>
-                                  <span className="font-semibold text-sm text-slate-800 whitespace-nowrap">
-                                    {passengers.adults + passengers.children + passengers.infants}{' '}
-                                    {lang === 'en' ? (passengers.adults + passengers.children + passengers.infants !== 1 ? 'Passengers' : 'Passenger') : 'مسافر'} {lang === 'en' ? 'Economy' : 'السياحية'}
-                                  </span>
-                                </div>
-                                <ChevronDown size={14} className="text-slate-400 ml-auto" />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Users size={16} strokeWidth={1.5} className="text-slate-400" />
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Passengers / Class' : 'المسافرون / الدرجة'}</span>
+                                    </div>
+                                    <span className="font-semibold text-sm text-slate-800 whitespace-nowrap block leading-tight">
+                                      {passengers.adults + passengers.children + passengers.infants}{' '}
+                                      {lang === 'en' ? (passengers.adults + passengers.children + passengers.infants !== 1 ? 'Passengers' : 'Passenger') : 'مسافر'} | {lang === 'en' ? 'Economy' : 'السياحية'}
+                                    </span>
+                                  </div>
+                                  <ChevronDown size={14} strokeWidth={1.5} className="text-slate-400 ml-auto" />
                               </div>
 
                               <AnimatePresence>
@@ -1539,7 +1563,7 @@ export default function App() {
                                         <div key={p.id} className="flex items-center justify-between">
                                           <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-tarco-blue">
-                                              <p.icon size={16} />
+                                              <p.icon size={16} strokeWidth={1.5} />
                                             </div>
                                             <div>
                                               <p className="text-xs font-bold text-tarco-blue">{p.label}</p>
@@ -1549,13 +1573,17 @@ export default function App() {
                                           <div className="flex items-center gap-3">
                                             <button
                                               onClick={() => updatePax(p.id as keyof PassengerCount, -1)}
-                                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 font-bold"
-                                            >âˆ’</button>
+                                              className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-tarco-red hover:border-tarco-red transition-all"
+                                            >
+                                              <Minus size={14} strokeWidth={2} />
+                                            </button>
                                             <span className="text-sm font-bold w-4 text-center">{passengers[p.id as keyof PassengerCount]}</span>
                                             <button
                                               onClick={() => updatePax(p.id as keyof PassengerCount, 1)}
-                                              className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 font-bold"
-                                            >+</button>
+                                              className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-tarco-blue hover:border-tarco-blue transition-all"
+                                            >
+                                              <Plus size={14} strokeWidth={2} />
+                                            </button>
                                           </div>
                                         </div>
                                       ))}
@@ -1572,17 +1600,18 @@ export default function App() {
 
                           {/* â”€â”€ Inline Calendar (expands booking card) â”€â”€ */}
                           {showCalendar && (
-                            <InlineCalendar
-                              departureDate={departureDate}
-                              returnDate={returnDate}
-                              isRoundTrip={isRoundTrip}
-                              isFlexible={isFlexibleDates}
-                              onDepartureChange={setDepartureDate}
-                              onReturnChange={setReturnDate}
-                              onFlexibleChange={setIsFlexibleDates}
-                              onClose={() => setShowCalendar(false)}
-                              t={t}
-                            />
+                             <InlineCalendar
+                               departureDate={departureDate}
+                               returnDate={returnDate}
+                               isRoundTrip={isRoundTrip}
+                               isFlexible={isFlexibleDates}
+                               onDepartureChange={setDepartureDate}
+                               onReturnChange={setReturnDate}
+                               onFlexibleChange={setIsFlexibleDates}
+                               onClose={() => setShowCalendar(false)}
+                               t={t}
+                               lang={lang}
+                             />
                           )}
 
                           {/* â”€â”€ Row 3: Bottom bar â€“ Promo + Search â”€â”€ */}
@@ -1600,9 +1629,13 @@ export default function App() {
                             <motion.button
                               whileHover={{ scale: 1.03 }}
                               whileTap={{ scale: 0.97 }}
-                              onClick={nextStep}
-                              className="bg-tarco-red hover:bg-red-700 text-white px-10 py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-red-100 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
+                              onClick={() => {
+                                setIsBookingFocused(false);
+                                nextStep();
+                              }}
+                              className="bg-tarco-red hover:bg-red-700 text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl shadow-red-900/10 transition-all flex items-center justify-center gap-3 w-full sm:w-auto"
                             >
+                              <Search size={18} strokeWidth={1.5} />
                               {t.booking.search}
                             </motion.button>
                           </div>
@@ -1643,819 +1676,874 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              {/* End of sticky booking card */}
+                {/* End of sticky booking card */}
 
 
-              {/* Sections below the booking card */}
-              <div className="max-w-7xl mx-auto px-4 space-y-24 pb-24">
-                {/* Complete Journey Section */}
-                <div className="py-24 space-y-12">
-                  <div className="text-center space-y-4">
-                    <h2 className="text-4xl font-black text-tarco-blue uppercase tracking-tight">{t.journey.title}</h2>
-                    <div className="w-24 h-1 bg-tarco-red mx-auto"></div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    {[
-                      { icon: Armchair, title: t.journey.seats.title, desc: t.journey.seats.desc, num: '01' },
-                      { icon: Download, title: t.journey.weight.title, desc: t.journey.weight.desc, num: '02' },
-                      { icon: ShieldCheck, title: t.journey.guidance.title, desc: t.journey.guidance.desc, num: '03' },
-                      { icon: Star, title: t.journey.manage.title, desc: t.journey.manage.desc, num: '04' }
-                    ].map((item, i) => (
-                      <motion.div 
-                        key={i}
-                        whileHover={{ y: -12, boxShadow: '0 30px 60px -12px rgba(0,0,0,0.15)' }}
-                        className="bg-white p-8 rounded-3xl shadow-xl border border-slate-50 text-center space-y-4 group cursor-pointer relative overflow-hidden"
-                      >
-                        <span className="absolute top-4 right-6 text-[3.5rem] font-black text-slate-50 group-hover:text-red-50 transition-colors select-none leading-none">{item.num}</span>
-                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-tarco-red group-hover:text-white transition-all duration-300 relative z-10">
-                          <item.icon size={32} />
-                        </div>
-                        <h3 className="font-bold text-tarco-blue relative z-10">{item.title}</h3>
-                        <p className="text-xs text-slate-400 leading-relaxed relative z-10">{item.desc}</p>
-                        <div className="pt-2 flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-widest text-tarco-red opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 relative z-10">
-                          {t.journey.learn} <ChevronRight size={12} className={lang === 'ar' ? 'rotate-180' : ''} />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-
-
-                {/* Destination Exploration Carousel */}
-                <div className="py-24 space-y-12 overflow-hidden">
-                  <div className="text-center space-y-4">
-                    <h2 className="text-4xl font-black text-tarco-blue uppercase tracking-tight">{t.destinations.title}</h2>
-                    <div className="w-24 h-1 bg-tarco-red mx-auto"></div>
-                  </div>
-                  
-                  <div className="flex gap-6 overflow-x-auto pb-12 px-4 no-scrollbar snap-x snap-mandatory">
-                    {[
-                      { id: 'riyadh', img: assets['dest_riyadh'] || '/Images/dest_riyadh.jpg', name: t.destinations.riyadh, price: 420, tag: t.destTags.booked },
-                      { id: 'cairo', img: assets['dest_cairo'] || '/Images/dest_cairo.jpg', name: t.destinations.cairo, price: 290, tag: t.destTags.value },
-                      { id: 'khartoum', img: assets['dest_khartoum'] || '/Images/dest_khartoum.jpg', name: lang === 'en' ? 'KHARTOUM' : 'الخرطوم', price: 250, tag: t.destTags.core },
-                      { id: 'portsudan', img: assets['dest_portsudan'] || '/Images/dest_portsudan.jpg', name: lang === 'en' ? 'PORT SUDAN' : 'بورتسودان', price: 220, tag: t.destTags.active },
-                      { id: 'jeddah', img: assets['dest_jeddah'] || '/Images/dest_jeddah.jpg', name: lang === 'en' ? 'JEDDAH' : 'جدة', price: 340, tag: t.destTags.popular },
-                    ].map((dest) => (
-                      <motion.div 
-                        key={dest.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="relative min-w-[85vw] md:min-w-[600px] h-[400px] rounded-[40px] overflow-hidden snap-center shadow-2xl group cursor-pointer"
-                      >
-                        <SafeImage 
-                          src={dest.img} 
-                          alt={dest.name} 
-                          className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
-                          fallbackSrc={dest.img}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                        
-                        {/* Tag badge */}
-                        <div className="absolute top-6 left-6 bg-tarco-gold/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
-                          {dest.tag}
-                        </div>
-
-                        {/* UI Overlay Card */}
-                        <div className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl flex justify-between items-center group-hover:bg-white/20 transition-all">
-                          <div>
-                            <h3 className="text-3xl font-black text-white uppercase">{dest.name}</h3>
-                            <p className="text-tarco-gold font-bold">{t.destinations.starting} <span className="text-2xl">${dest.price}</span></p>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-tarco-red text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-red-600 transition-colors shadow-lg shadow-red-900/40"
-                          >
-                            {t.destinations.bookNow}
-                          </motion.button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Live Statistics Ticker */}
-                <div className="py-16 bg-tarco-blue rounded-[40px] shadow-2xl overflow-hidden relative">
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
-                  <div className="relative z-10 max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
-                    {liveStats.map((stat, i) => (
-                      <StatCard key={i} stat={stat} lang={lang} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Service Excellence Section */}
-                <div className="py-24 bg-white rounded-[60px] shadow-sm border border-slate-100 overflow-hidden">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 items-center">
-                    <div className="p-12 lg:p-24 space-y-8">
-                      <div className="space-y-4">
-                        <h2 className="text-5xl font-black text-tarco-blue leading-tight">{t.excellence.title}</h2>
-                        <p className="text-xl text-tarco-red font-bold">{t.excellence.subtitle}</p>
-                      </div>
-                      
-                      <div className="space-y-6">
-                        {[t.excellence.point1, t.excellence.point2, t.excellence.point3].map((point, i) => (
-                          <div key={i} className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-tarco-red/10 rounded-full flex items-center justify-center text-tarco-red">
-                              <Check size={20} />
-                            </div>
-                            <span className="text-lg font-bold text-slate-700">{point}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <p className="text-slate-500 italic border-l-4 border-tarco-red pl-6 py-2">
-                        "{t.excellence.desc}"
-                      </p>
-                      
-                      <button className="bg-tarco-blue text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-tarco-navy transition-all shadow-xl shadow-blue-100">
-                        {t.journey.learn}
-                      </button>
+                {/* Sections below the booking card */}
+                <div className="max-w-7xl mx-auto px-4 space-y-24 pb-24">
+                  {/* Complete Journey Section */}
+                  <div className="py-24 space-y-12">
+                    <div className="text-center space-y-4">
+                      <h2 className="text-4xl font-black text-tarco-blue uppercase tracking-tight">{t.journey.title}</h2>
+                      <div className="w-24 h-1 bg-tarco-red mx-auto"></div>
                     </div>
-                    
-                    <div className="h-[600px] relative">
-                      <SafeImage 
-                        src={assets['crew_photo'] || "/Images/crew_photo.jpg"} 
-                        alt="Cabin Crew" 
-                        className="absolute inset-0 w-full h-full"
-                        fallbackSrc="/Images/crew_photo.jpg"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-l from-white/20 to-transparent hidden lg:block"></div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                      {[
+                        { icon: Armchair, title: t.journey.seats.title, desc: t.journey.seats.desc, num: '01' },
+                        { icon: Download, title: t.journey.weight.title, desc: t.journey.weight.desc, num: '02' },
+                        { icon: ShieldCheck, title: t.journey.guidance.title, desc: t.journey.guidance.desc, num: '03' },
+                        { icon: Star, title: t.journey.manage.title, desc: t.journey.manage.desc, num: '04' }
+                      ].map((item, i) => (
+                        <motion.div
+                          key={i}
+                          whileHover={{ y: -12, boxShadow: '0 30px 60px -12px rgba(0,0,0,0.15)' }}
+                          className="bg-white p-8 rounded-3xl shadow-xl border border-slate-50 text-center space-y-4 group cursor-pointer relative overflow-hidden"
+                        >
+                          <span className="absolute top-4 right-6 text-[3.5rem] font-black text-slate-50 group-hover:text-red-50 transition-colors select-none leading-none">{item.num}</span>
+                          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-tarco-red group-hover:text-white transition-all duration-300 relative z-10">
+                            <item.icon size={32} />
+                          </div>
+                          <h3 className="font-bold text-tarco-blue relative z-10">{item.title}</h3>
+                          <p className="text-xs text-slate-400 leading-relaxed relative z-10">{item.desc}</p>
+                          <div className="pt-2 flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-widest text-tarco-red opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 relative z-10">
+                            {t.journey.learn} <ChevronRight size={12} className={lang === 'ar' ? 'rotate-180' : ''} />
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
                   </div>
-                </div>
 
-                {/* Popular Destinations Grid */}
-                <div className="py-24 space-y-12">
-                  <div className="flex justify-between items-end">
-                    <div className="space-y-4">
+
+
+                  {/* Destination Exploration Carousel */}
+                  <div className="py-24 space-y-12 overflow-hidden">
+                    <div className="text-center space-y-4">
                       <h2 className="text-4xl font-black text-tarco-blue uppercase tracking-tight">{t.destinations.title}</h2>
-                      <div className="w-24 h-1 bg-tarco-red"></div>
+                      <div className="w-24 h-1 bg-tarco-red mx-auto"></div>
                     </div>
-                    <button className="text-tarco-red font-black uppercase tracking-widest text-xs hover:underline">
-                      {lang === 'en' ? 'View All Destinations' : 'عرض كل الوجهات'}
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {[
-                      { id: 'dubai', img: assets['dest_dubai'] || '/Images/dest_dubai.jpg', name: 'DUBAI', price: 380, flights: 8 },
-                      { id: 'doha', img: assets['dest_doha'] || '/Images/dest_doha.jpg', name: 'DOHA', price: 410, flights: 3 },
-                      { id: 'muscat', img: assets['dest_muscat'] || '/Images/dest_muscat.jpg', name: 'MUSCAT', price: 390, flights: 2 },
-                      { id: 'entebbe', img: assets['dest_entebbe'] || '/Images/dest_entebbe.jpg', name: 'ENTEBBE', price: 450, flights: 2 },
-                    ].map((dest) => (
-                      <motion.div 
-                        key={dest.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="relative h-[300px] rounded-[40px] overflow-hidden shadow-xl group cursor-pointer"
-                      >
-                        <SafeImage 
-                          src={dest.img} 
-                          alt={dest.name} 
-                          className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
-                          fallbackSrc={dest.img}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all"></div>
 
-                        {/* Hover-reveal info */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                          <h3 className="text-4xl font-black text-white tracking-[0.2em] group-hover:-translate-y-4 transition-all duration-300">{dest.name}</h3>
-                          <div className="opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex flex-col items-center gap-2">
-                            <p className="text-tarco-gold font-bold text-lg">From ${dest.price}</p>
-                            <div className="flex items-center gap-2 text-white/70 text-xs">
-                              <Clock size={12} />
-                              <span>{dest.flights} flights daily</span>
+                    <div className="flex gap-6 overflow-x-auto pb-12 px-4 no-scrollbar snap-x snap-mandatory">
+                      {[
+                        { id: 'riyadh', img: assets['dest_riyadh'] || '/Images/dest_riyadh.jpg', name: t.destinations.riyadh, price: 420, tag: t.destTags.booked },
+                        { id: 'cairo', img: assets['dest_cairo'] || '/Images/dest_cairo.jpg', name: t.destinations.cairo, price: 290, tag: t.destTags.value },
+                        { id: 'addis', img: assets['dest_addis'] || '/Images/dest_addis.webp', name: t.destinations.addis, price: 310, tag: t.destTags.popular },
+                        { id: 'asmara', img: assets['dest_asmara'] || '/Images/dest_asmara.jpg', name: t.destinations.asmara, price: 280, tag: t.destTags.value },
+                        { id: 'khartoum', img: assets['dest_khartoum'] || '/Images/dest_khartoum.jpg', name: lang === 'en' ? 'KHARTOUM' : 'الخرطوم', price: 250, tag: t.destTags.core },
+                        { id: 'portsudan', img: assets['dest_portsudan'] || '/Images/dest_portsudan.jpg', name: lang === 'en' ? 'PORT SUDAN' : 'بورتسودان', price: 220, tag: t.destTags.active },
+                        { id: 'jeddah', img: assets['dest_jeddah'] || '/Images/dest_jeddah.jpg', name: lang === 'en' ? 'JEDDAH' : 'جدة', price: 340, tag: t.destTags.popular },
+                      ].map((dest) => (
+                        <motion.div
+                          key={dest.id}
+                          whileHover={{ scale: 1.02 }}
+                          className="relative min-w-[85vw] md:min-w-[600px] h-[400px] rounded-[40px] overflow-hidden snap-center shadow-2xl group cursor-pointer"
+                        >
+                          <SafeImage
+                            src={dest.img}
+                            alt={dest.name}
+                            className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
+                            fallbackSrc={dest.img}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+
+                          {/* Tag badge */}
+                          <div className="absolute top-6 left-6 bg-tarco-gold/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
+                            {dest.tag}
+                          </div>
+
+                          {/* UI Overlay Card */}
+                          <div className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl flex justify-between items-center group-hover:bg-white/20 transition-all">
+                            <div>
+                              <h3 className="text-3xl font-black text-white uppercase">{dest.name}</h3>
+                              <p className="text-tarco-gold font-bold">{t.destinations.starting} <span className="text-2xl">${dest.price}</span></p>
                             </div>
                             <motion.button
+                              whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              className="mt-1 bg-tarco-red text-white px-6 py-2 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg"
+                              className="bg-tarco-red text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-red-600 transition-colors shadow-lg shadow-red-900/40"
                             >
                               {t.destinations.bookNow}
                             </motion.button>
                           </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
-          {step !== 'search' && (
-            <motion.div
-              key="checkout"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="max-w-7xl mx-auto px-4 py-12"
-            >
-              {step === 'results' && (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-8"
-            >
-              <div className="flex justify-between items-end">
-                <div>
-                  <h2 className="text-3xl font-bold text-tarco-navy">{t.results.title}</h2>
-                  <p className="text-slate-500">Flight TRC-402 â€¢ {from} to {to}</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold text-slate-400 uppercase">{t.results.departing}</span>
-                  <p className="font-bold">08:45 AM â€¢ 14 Apr</p>
-                </div>
-              </div>
-
-              {/* Price Calendar Strip (Saudia Style) */}
-              <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100 flex overflow-x-auto no-scrollbar">
-                {[
-                  { date: '11 Apr', price: 280 },
-                  { date: '12 Apr', price: 265 },
-                  { date: '13 Apr', price: 250 },
-                  { date: '14 Apr', price: 240, active: true },
-                  { date: '15 Apr', price: 240 },
-                  { date: '16 Apr', price: 290 },
-                  { date: '17 Apr', price: 310 },
-                ].map((d, i) => (
-                  <div 
-                    key={i}
-                    className={`flex-1 min-w-[100px] py-4 px-2 rounded-xl text-center cursor-pointer transition-all ${d.active ? 'bg-tarco-blue text-white shadow-lg' : 'hover:bg-slate-50'}`}
-                  >
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${d.active ? 'text-white/60' : 'text-slate-400'}`}>{d.date}</p>
-                    <p className="text-sm font-black mt-1">${d.price}</p>
+                  {/* Live Statistics Ticker */}
+                  <div className="py-16 bg-tarco-blue rounded-[40px] shadow-2xl overflow-hidden relative">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
+                    <div className="relative z-10 max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
+                      {liveStats.map((stat, i) => (
+                        <StatCard key={i} stat={stat} lang={lang} />
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {FARES.map((fare) => (
-                  <motion.div
-                    key={fare.id}
-                    whileHover={{ y: -5 }}
-                    onClick={() => setSelectedFare(fare)}
-                    className={`relative cursor-pointer rounded-3xl p-8 border-2 transition-all ${
-                      selectedFare?.id === fare.id 
-                        ? 'border-tarco-navy bg-white shadow-2xl' 
-                        : fare.recommended 
-                          ? 'border-tarco-gold bg-white shadow-xl' 
-                          : 'border-slate-100 bg-white hover:border-slate-200'
-                    } ${fare.recommended ? 'md:scale-105 z-10' : ''}`}
-                  >
-                    {fare.recommended && (
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-tarco-red text-white text-[10px] font-black uppercase tracking-tighter px-4 py-1 rounded-full shadow-md">
-                        {t.results.popular}
-                      </div>
-                    )}
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-xl font-bold text-tarco-blue">
-                            {fare.id === 'lite' ? t.fares.lite : fare.id === 'semi' ? t.fares.semi : t.fares.business}
-                          </h3>
-                          <div className="flex items-baseline gap-1 mt-2">
-                            <span className="text-sm font-bold text-slate-400">$</span>
-                            <span className="text-4xl font-black">{fare.price}</span>
+                  {/* Service Excellence Section - Premium Redesign */}
+                  <div className="py-32 relative overflow-visible">
+                    <div className="max-w-7xl mx-auto px-4 relative">
+                      <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-0">
+                        
+                        {/* Image Side - Larger, Stylized */}
+                        <motion.div 
+                          initial={{ opacity: 0, x: 100 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className="w-full lg:w-2/3 relative z-10 group"
+                        >
+                          <div className="absolute -inset-4 bg-tarco-gold/20 rounded-[100px] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                          <motion.div 
+                            whileHover={{ scale: 1.02, rotate: -1 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            className="relative aspect-[16/10] rounded-[80px] overflow-hidden shadow-[0_48px_100px_-20px_rgba(0,0,0,0.3)] ring-1 ring-white/20"
+                          >
+                            <SafeImage
+                              src={assets['crew_photo'] || "/Images/crew_photo.jpg"}
+                              alt="Cabin Crew"
+                              className="w-full h-full object-cover"
+                              fallbackSrc="/Images/crew_photo.jpg"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-tarco-blue/40 to-transparent"></div>
+                          </motion.div>
+                          
+                          {/* Decorative Floating Element */}
+                          <motion.div 
+                            animate={{ y: [0, -20, 0] }}
+                            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -bottom-8 -right-8 w-48 h-48 bg-tarco-gold/10 rounded-full blur-2xl z-0"
+                          ></motion.div>
+                        </motion.div>
+
+                        {/* Content Card Side - Overlapping */}
+                        <motion.div 
+                          initial={{ opacity: 0, x: -100 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                          className="w-full lg:w-[500px] lg:-ml-24 relative z-20"
+                        >
+                          <div className="bg-white/95 backdrop-blur-xl p-10 lg:p-14 rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] border border-slate-100 space-y-10 group">
+                            
+                            <div className="space-y-4">
+                              <span className="text-tarco-red font-black uppercase tracking-[0.3em] text-xs px-4 py-2 bg-tarco-red/5 rounded-full inline-block">
+                                {t.excellence.subtitle}
+                              </span>
+                              <h2 className="text-5xl lg:text-7xl font-black text-tarco-blue leading-[0.95] tracking-tighter">
+                                Excellence <span className="block text-tarco-red italic font-medium tracking-normal text-5xl mt-2">in Service</span>
+                              </h2>
+                            </div>
+
+                            {/* Service Badges Grid */}
+                            <div className="grid grid-cols-1 gap-4">
+                              {[
+                                { text: t.excellence.point1, icon: ShieldCheck },
+                                { text: t.excellence.point2, icon: Users },
+                                { text: t.excellence.point3, icon: Plane }
+                              ].map((item, i) => (
+                                <motion.div 
+                                  key={i}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  whileInView={{ opacity: 1, y: 0 }}
+                                  viewport={{ once: true }}
+                                  transition={{ delay: 0.4 + (i * 0.1) }}
+                                  className="flex items-center gap-4 group/item cursor-default"
+                                >
+                                  <div className="w-12 h-12 bg-tarco-gold/10 rounded-2xl flex items-center justify-center text-tarco-gold group-hover/item:bg-tarco-gold group-hover/item:text-white transition-all duration-300">
+                                    <item.icon size={22} strokeWidth={1.5} />
+                                  </div>
+                                  <span className="text-sm font-black uppercase tracking-widest text-slate-600 group-hover/item:text-tarco-blue transition-colors">
+                                    {item.text}
+                                  </span>
+                                </motion.div>
+                              ))}
+                            </div>
+
+                            <p className="text-slate-500 text-sm leading-relaxed font-medium italic opacity-80">
+                              "{t.excellence.desc}"
+                            </p>
+
+                            <motion.button 
+                              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px -10px rgba(29, 66, 150, 0.3)" }}
+                              whileTap={{ scale: 0.95 }}
+                              className="w-full bg-tarco-blue text-white py-6 rounded-[24px] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-blue-900/20 hover:bg-tarco-navy transition-all"
+                            >
+                              {t.journey.learn}
+                            </motion.button>
                           </div>
-                        </div>
-                      </div>
-                      
-                      <ul className="space-y-3">
-                        {fare.features.map((feature, i) => (
-                          <FeatureItem key={i} feature={feature} lang={lang} />
-                        ))}
-                      </ul>
+                        </motion.div>
 
-                      <button 
-                        className={`w-full py-4 rounded-2xl font-bold transition-all ${
-                          selectedFare?.id === fare.id 
-                            ? 'bg-tarco-navy text-white' 
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Popular Destinations Grid */}
+                  <div className="py-24 space-y-12">
+                    <div className="flex justify-between items-end">
+                      <div className="space-y-4">
+                        <h2 className="text-4xl font-black text-tarco-blue uppercase tracking-tight">{t.destinations.title}</h2>
+                        <div className="w-24 h-1 bg-tarco-red"></div>
+                      </div>
+                      <button className="text-tarco-red font-black uppercase tracking-widest text-xs hover:underline">
+                        {lang === 'en' ? 'View All Destinations' : 'عرض كل الوجهات'}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {[
+                        { id: 'dubai', img: assets['dest_dubai'] || '/Images/dest_dubai.jpg', name: 'DUBAI', price: 380, flights: 8 },
+                        { id: 'doha', img: assets['dest_doha'] || '/Images/dest_doha.jpg', name: 'DOHA', price: 410, flights: 3 },
+                        { id: 'muscat', img: assets['dest_muscat'] || '/Images/dest_muscat.jpg', name: 'MUSCAT', price: 390, flights: 2 },
+                        { id: 'entebbe', img: assets['dest_entebbe'] || '/Images/dest_entebbe.jpg', name: 'ENTEBBE', price: 450, flights: 2 },
+                      ].map((dest) => (
+                        <motion.div
+                          key={dest.id}
+                          whileHover={{ scale: 1.02 }}
+                          className="relative h-[300px] rounded-[40px] overflow-hidden shadow-xl group cursor-pointer"
+                        >
+                          <SafeImage
+                            src={dest.img}
+                            alt={dest.name}
+                            className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
+                            fallbackSrc={dest.img}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all"></div>
+
+                          {/* Hover-reveal info */}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                            <h3 className="text-4xl font-black text-white tracking-[0.2em] group-hover:-translate-y-4 transition-all duration-300">{dest.name}</h3>
+                            <div className="opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex flex-col items-center gap-2">
+                              <p className="text-tarco-gold font-bold text-lg">From ${dest.price}</p>
+                              <div className="flex items-center gap-2 text-white/70 text-xs">
+                                <Clock size={12} />
+                                <span>{dest.flights} flights daily</span>
+                              </div>
+                              <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                className="mt-1 bg-tarco-red text-white px-6 py-2 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg"
+                              >
+                                {t.destinations.bookNow}
+                              </motion.button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {step !== 'search' && (
+              <motion.div
+                key="checkout"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="max-w-7xl mx-auto px-4 py-12"
+              >
+                {step === 'results' && (
+                  <motion.div
+                    key="results"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-8"
+                  >
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <h2 className="text-3xl font-bold text-tarco-navy">{t.results.title}</h2>
+                        <p className="text-slate-500">Flight TRC-402 â€¢ {from} to {to}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-slate-400 uppercase">{t.results.departing}</span>
+                        <p className="font-bold">08:45 AM â€¢ 14 Apr</p>
+                      </div>
+                    </div>
+
+                    {/* Price Calendar Strip (Saudia Style) */}
+                    <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100 flex overflow-x-auto no-scrollbar">
+                      {[
+                        { date: '11 Apr', price: 280 },
+                        { date: '12 Apr', price: 265 },
+                        { date: '13 Apr', price: 250 },
+                        { date: '14 Apr', price: 240, active: true },
+                        { date: '15 Apr', price: 240 },
+                        { date: '16 Apr', price: 290 },
+                        { date: '17 Apr', price: 310 },
+                      ].map((d, i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 min-w-[100px] py-4 px-2 rounded-xl text-center cursor-pointer transition-all ${d.active ? 'bg-tarco-blue text-white shadow-lg' : 'hover:bg-slate-50'}`}
+                        >
+                          <p className={`text-[10px] font-black uppercase tracking-widest ${d.active ? 'text-white/60' : 'text-slate-400'}`}>{d.date}</p>
+                          <p className="text-sm font-black mt-1">${d.price}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {FARES.map((fare) => (
+                        <motion.div
+                          key={fare.id}
+                          whileHover={{ y: -5 }}
+                          onClick={() => setSelectedFare(fare)}
+                          className={`relative cursor-pointer rounded-3xl p-8 border-2 transition-all ${selectedFare?.id === fare.id
+                              ? 'border-tarco-navy bg-white shadow-2xl'
+                              : fare.recommended
+                                ? 'border-tarco-gold bg-white shadow-xl'
+                                : 'border-slate-100 bg-white hover:border-slate-200'
+                            } ${fare.recommended ? 'md:scale-105 z-10' : ''}`}
+                        >
+                          {fare.recommended && (
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-tarco-red text-white text-[10px] font-black uppercase tracking-tighter px-4 py-1 rounded-full shadow-md">
+                              {t.results.popular}
+                            </div>
+                          )}
+                          <div className="space-y-6">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-xl font-bold text-tarco-blue">
+                                  {fare.id === 'lite' ? t.fares.lite : fare.id === 'semi' ? t.fares.semi : t.fares.business}
+                                </h3>
+                                <div className="flex items-baseline gap-1 mt-2">
+                                  <span className="text-sm font-bold text-slate-400">$</span>
+                                  <span className="text-4xl font-black">{fare.price}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <ul className="space-y-3">
+                              {fare.features.map((feature, i) => (
+                                <FeatureItem key={i} feature={feature} lang={lang} />
+                              ))}
+                            </ul>
+
+                            <button
+                              className={`w-full py-4 rounded-2xl font-bold transition-all ${selectedFare?.id === fare.id
+                                  ? 'bg-tarco-navy text-white'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                              {selectedFare?.id === fare.id ? t.results.selected : t.results.select}
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-between items-center pt-8 border-t border-slate-200">
+                      <button onClick={() => setStep('search')} className="text-slate-400 font-bold hover:text-tarco-navy transition-colors">{t.results.back}</button>
+                      <button
+                        disabled={!selectedFare}
+                        onClick={nextStep}
+                        className={`px-12 py-4 rounded-2xl font-bold shadow-lg transition-all ${selectedFare
+                            ? 'bg-tarco-red text-white hover:bg-red-600 active:scale-95'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                          }`}
                       >
-                        {selectedFare?.id === fare.id ? t.results.selected : t.results.select}
+                        {t.results.continue}
                       </button>
                     </div>
                   </motion.div>
-                ))}
-              </div>
+                )}
 
-              <div className="flex justify-between items-center pt-8 border-t border-slate-200">
-                <button onClick={() => setStep('search')} className="text-slate-400 font-bold hover:text-tarco-navy transition-colors">{t.results.back}</button>
-                <button 
-                  disabled={!selectedFare}
-                  onClick={nextStep}
-                  className={`px-12 py-4 rounded-2xl font-bold shadow-lg transition-all ${
-                    selectedFare 
-                      ? 'bg-tarco-red text-white hover:bg-red-600 active:scale-95' 
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}
-                >
-                  {t.results.continue}
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 'services' && (
-            <motion.div
-              key="services"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-8"
-            >
-              <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold text-tarco-navy">{t.services.title}</h2>
-                <p className="text-slate-500">{t.services.subtitle}</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {EXTRA_SERVICES.map((service) => (
+                {step === 'services' && (
                   <motion.div
-                    key={service.id}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => toggleService(service.id)}
-                    className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-center gap-6 ${
-                      selectedServices.includes(service.id) 
-                        ? 'border-tarco-blue bg-white shadow-xl' 
-                        : 'border-slate-100 bg-white hover:border-slate-200'
-                    }`}
+                    key="services"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-8"
                   >
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${selectedServices.includes(service.id) ? 'bg-tarco-blue text-white' : 'bg-slate-50 text-slate-400'}`}>
-                      <service.icon size={32} />
+                    <div className="text-center space-y-2">
+                      <h2 className="text-3xl font-bold text-tarco-navy">{t.services.title}</h2>
+                      <p className="text-slate-500">{t.services.subtitle}</p>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-tarco-blue">{t.serviceItems[service.id as keyof typeof t.serviceItems].name}</h3>
-                      <p className="text-xs text-slate-400">{t.serviceItems[service.id as keyof typeof t.serviceItems].desc}</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {EXTRA_SERVICES.map((service) => (
+                        <motion.div
+                          key={service.id}
+                          whileHover={{ scale: 1.02 }}
+                          onClick={() => toggleService(service.id)}
+                          className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-center gap-6 ${selectedServices.includes(service.id)
+                              ? 'border-tarco-blue bg-white shadow-xl'
+                              : 'border-slate-100 bg-white hover:border-slate-200'
+                            }`}
+                        >
+                          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${selectedServices.includes(service.id) ? 'bg-tarco-blue text-white' : 'bg-slate-50 text-slate-400'}`}>
+                            <service.icon size={32} />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-tarco-blue">{t.serviceItems[service.id as keyof typeof t.serviceItems].name}</h3>
+                            <p className="text-xs text-slate-400">{t.serviceItems[service.id as keyof typeof t.serviceItems].desc}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-black text-tarco-blue">${service.price}</p>
+                            <div className={`w-6 h-6 rounded-full border-2 mt-2 flex items-center justify-center transition-all ${selectedServices.includes(service.id) ? 'bg-tarco-red border-tarco-red' : 'border-slate-200'}`}>
+                              {selectedServices.includes(service.id) && <Check size={14} className="text-white" />}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-black text-tarco-blue">${service.price}</p>
-                      <div className={`w-6 h-6 rounded-full border-2 mt-2 flex items-center justify-center transition-all ${selectedServices.includes(service.id) ? 'bg-tarco-red border-tarco-red' : 'border-slate-200'}`}>
-                        {selectedServices.includes(service.id) && <Check size={14} className="text-white" />}
+
+                    <div className="flex justify-between items-center pt-8 border-t border-slate-200">
+                      <button onClick={() => setStep('results')} className="text-slate-400 font-bold hover:text-tarco-navy transition-colors">{t.services.back}</button>
+                      <div className="flex items-center gap-8">
+                        <div className="text-right">
+                          <p className="text-[10px] font-black text-slate-400 uppercase">{t.services.total}</p>
+                          <p className="text-xl font-black text-tarco-blue">
+                            ${selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={nextStep}
+                          className="px-12 py-4 bg-tarco-red text-white rounded-2xl font-bold shadow-lg hover:bg-red-600 active:scale-95 transition-all"
+                        >
+                          {t.services.continue}
+                        </button>
                       </div>
                     </div>
                   </motion.div>
-                ))}
-              </div>
+                )}
 
-              <div className="flex justify-between items-center pt-8 border-t border-slate-200">
-                <button onClick={() => setStep('results')} className="text-slate-400 font-bold hover:text-tarco-navy transition-colors">{t.services.back}</button>
-                <div className="flex items-center gap-8">
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase">{t.services.total}</p>
-                    <p className="text-xl font-black text-tarco-blue">
-                      ${selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={nextStep}
-                    className="px-12 py-4 bg-tarco-red text-white rounded-2xl font-bold shadow-lg hover:bg-red-600 active:scale-95 transition-all"
+                {step === 'seats' && (
+                  <motion.div
+                    key="seats"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-12"
                   >
-                    {t.services.continue}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 'seats' && (
-            <motion.div
-              key="seats"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-12"
-            >
-              <div className="lg:col-span-8 space-y-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-tarco-navy">{t.seats.title}</h2>
-                  <p className="text-slate-500">{t.seats.subtitle}</p>
-                </div>
-
-                {/* Seat Map */}
-                <div className="bg-white rounded-[40px] p-12 shadow-xl border border-slate-100 relative overflow-hidden">
-                  {/* Airplane Shape Decoration */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-full bg-slate-50/50 rounded-t-[200px] border-x border-slate-100 pointer-events-none">
-                    {/* Cockpit Area */}
-                    <div className="absolute top-0 left-0 right-0 h-48 bg-slate-100/50 rounded-t-[200px] border-b border-slate-200 flex flex-col items-center justify-center gap-2">
-                      <div className="flex gap-8">
-                        <div className="w-16 h-8 bg-slate-200 rounded-tl-full" />
-                        <div className="w-16 h-8 bg-slate-200 rounded-tr-full" />
+                    <div className="lg:col-span-8 space-y-8">
+                      <div>
+                        <h2 className="text-3xl font-bold text-tarco-navy">{t.seats.title}</h2>
+                        <p className="text-slate-500">{t.seats.subtitle}</p>
                       </div>
-                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">{t.seats.deck}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="relative z-10 space-y-4 max-w-md mx-auto pt-48">
-                    {/* Column Labels */}
-                    <div className="grid grid-cols-6 gap-3 mb-8 text-center text-[10px] font-black text-slate-300">
-                      <span>A</span><span>B</span><span>C</span><span className="opacity-0">|</span><span>D</span><span>E</span><span>F</span>
-                    </div>
 
-                    {SEATS.map((row, rowIndex) => (
-                      <div key={rowIndex} className="grid grid-cols-6 gap-3 items-center">
-                        {row.map((seat, colIndex) => (
-                          <React.Fragment key={seat.id}>
-                            {colIndex === 3 && <div className="w-4 h-full flex items-center justify-center text-[10px] font-bold text-slate-200">{rowIndex + 1}</div>}
-                            <motion.button
-                              whileHover={seat.type !== 'occupied' ? { scale: 1.1 } : {}}
-                              whileTap={seat.type !== 'occupied' ? { scale: 0.95 } : {}}
-                              disabled={seat.type === 'occupied'}
-                              onClick={() => setSelectedSeat(seat)}
-                              className={`relative aspect-square rounded-lg flex items-center justify-center transition-all ${
-                                seat.type === 'occupied' 
-                                  ? 'bg-slate-200 cursor-not-allowed' 
-                                  : selectedSeat?.id === seat.id
-                                    ? 'bg-red-500 text-white shadow-lg shadow-red-200'
-                                    : seat.price > 0
-                                      ? 'bg-tarco-navy text-white'
-                                      : 'bg-blue-100 text-tarco-navy hover:bg-blue-200'
-                              }`}
-                            >
-                              <Armchair size={16} />
-                              {selectedSeat?.id === seat.id && seat.price > 0 && (
-                                <motion.div 
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-20"
-                                >
-                                  Legroom: +${seat.price}
-                                </motion.div>
-                              )}
-                            </motion.button>
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-4 space-y-6">
-                <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 space-y-6 sticky top-24">
-                  <h3 className="text-xl font-bold text-tarco-navy">{t.seats.summary}</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">{t.seats.fare} ({selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business})</span>
-                      <span className="font-bold">${selectedFare?.price}</span>
-                    </div>
-                    {selectedServices.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-[10px] font-black text-slate-300 uppercase">{t.seats.extra}</p>
-                        {selectedServices.map(id => {
-                          const s = EXTRA_SERVICES.find(x => x.id === id);
-                          return (
-                            <div key={id} className="flex justify-between text-sm">
-                              <span className="text-slate-500">{t.serviceItems[id as keyof typeof t.serviceItems].name}</span>
-                              <span className="font-bold">${s?.price}</span>
+                      {/* Seat Map */}
+                      <div className="bg-white rounded-[40px] p-12 shadow-xl border border-slate-100 relative overflow-hidden">
+                        {/* Airplane Shape Decoration */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-full bg-slate-50/50 rounded-t-[200px] border-x border-slate-100 pointer-events-none">
+                          {/* Cockpit Area */}
+                          <div className="absolute top-0 left-0 right-0 h-48 bg-slate-100/50 rounded-t-[200px] border-b border-slate-200 flex flex-col items-center justify-center gap-2">
+                            <div className="flex gap-8">
+                              <div className="w-16 h-8 bg-slate-200 rounded-tl-full" />
+                              <div className="w-16 h-8 bg-slate-200 rounded-tr-full" />
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {selectedSeat && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">{t.seats.seat} {selectedSeat.label}</span>
-                        <span className="font-bold">${selectedSeat.price}</span>
-                      </div>
-                    )}
-                    <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
-                      <span className="font-bold text-tarco-navy">{t.seats.total}</span>
-                      <span className="text-3xl font-black text-tarco-navy">
-                        ${(selectedFare?.price || 0) + 
-                          (selectedSeat?.price || 0) + 
-                          selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)
-                        }
-                      </span>
-                    </div>
-                  </div>
+                            <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">{t.seats.deck}</span>
+                          </div>
+                        </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <ShieldCheck size={16} className="text-emerald-500" />
-                      {t.seats.secure}
-                    </div>
-                  </div>
+                        <div className="relative z-10 space-y-4 max-w-md mx-auto pt-48">
+                          {/* Column Labels */}
+                          <div className="grid grid-cols-6 gap-3 mb-8 text-center text-[10px] font-black text-slate-300">
+                            <span>A</span><span>B</span><span>C</span><span className="opacity-0">|</span><span>D</span><span>E</span><span>F</span>
+                          </div>
 
-                  <button 
-                    onClick={nextStep}
-                    disabled={!selectedSeat}
-                    className={`w-full py-4 rounded-2xl font-bold shadow-lg transition-all ${
-                      selectedSeat 
-                        ? 'bg-tarco-navy text-white hover:bg-slate-800 active:scale-95' 
-                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    }`}
+                          {SEATS.map((row, rowIndex) => (
+                            <div key={rowIndex} className="grid grid-cols-6 gap-3 items-center">
+                              {row.map((seat, colIndex) => (
+                                <React.Fragment key={seat.id}>
+                                  {colIndex === 3 && <div className="w-4 h-full flex items-center justify-center text-[10px] font-bold text-slate-200">{rowIndex + 1}</div>}
+                                  <motion.button
+                                    whileHover={seat.type !== 'occupied' ? { scale: 1.1 } : {}}
+                                    whileTap={seat.type !== 'occupied' ? { scale: 0.95 } : {}}
+                                    disabled={seat.type === 'occupied'}
+                                    onClick={() => setSelectedSeat(seat)}
+                                    className={`relative aspect-square rounded-lg flex items-center justify-center transition-all ${seat.type === 'occupied'
+                                        ? 'bg-slate-200 cursor-not-allowed'
+                                        : selectedSeat?.id === seat.id
+                                          ? 'bg-red-500 text-white shadow-lg shadow-red-200'
+                                          : seat.price > 0
+                                            ? 'bg-tarco-navy text-white'
+                                            : 'bg-blue-100 text-tarco-navy hover:bg-blue-200'
+                                      }`}
+                                  >
+                                    <Armchair size={16} />
+                                    {selectedSeat?.id === seat.id && seat.price > 0 && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-20"
+                                      >
+                                        Legroom: +${seat.price}
+                                      </motion.div>
+                                    )}
+                                  </motion.button>
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-4 space-y-6">
+                      <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 space-y-6 sticky top-24">
+                        <h3 className="text-xl font-bold text-tarco-navy">{t.seats.summary}</h3>
+
+                        <div className="space-y-4">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">{t.seats.fare} ({selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business})</span>
+                            <span className="font-bold">${selectedFare?.price}</span>
+                          </div>
+                          {selectedServices.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-black text-slate-300 uppercase">{t.seats.extra}</p>
+                              {selectedServices.map(id => {
+                                const s = EXTRA_SERVICES.find(x => x.id === id);
+                                return (
+                                  <div key={id} className="flex justify-between text-sm">
+                                    <span className="text-slate-500">{t.serviceItems[id as keyof typeof t.serviceItems].name}</span>
+                                    <span className="font-bold">${s?.price}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {selectedSeat && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-500">{t.seats.seat} {selectedSeat.label}</span>
+                              <span className="font-bold">${selectedSeat.price}</span>
+                            </div>
+                          )}
+                          <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
+                            <span className="font-bold text-tarco-navy">{t.seats.total}</span>
+                            <span className="text-3xl font-black text-tarco-navy">
+                              ${(selectedFare?.price || 0) +
+                                (selectedSeat?.price || 0) +
+                                selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)
+                              }
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3 text-xs text-slate-500">
+                            <ShieldCheck size={16} className="text-emerald-500" />
+                            {t.seats.secure}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={nextStep}
+                          disabled={!selectedSeat}
+                          className={`w-full py-4 rounded-2xl font-bold shadow-lg transition-all ${selectedSeat
+                              ? 'bg-tarco-navy text-white hover:bg-slate-800 active:scale-95'
+                              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            }`}
+                        >
+                          {t.seats.confirm}
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {step === 'success' && (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-12 space-y-12"
                   >
-                    {t.seats.confirm}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 'success' && (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center py-12 space-y-12"
-            >
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Check size={40} />
-                </div>
-                <h2 className="text-4xl font-black text-tarco-navy">{t.success.title}</h2>
-                <p className="text-slate-500">{t.success.subtitle} {to} {t.success.begins}</p>
-              </div>
-
-              {/* Digital Boarding Pass */}
-              <motion.div 
-                initial={{ y: 40, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="w-full max-w-sm bg-white rounded-[32px] overflow-hidden shadow-2xl border border-slate-100"
-              >
-                <div className="bg-tarco-blue p-8 text-white space-y-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex flex-col leading-none">
-                      <div className="flex items-center gap-0.5">
-                        <span className="font-black tracking-tighter text-tarco-red">TARCO</span>
-                        <span className="font-black tracking-tighter text-white">AVIATION</span>
+                    <div className="text-center space-y-4">
+                      <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Check size={40} />
                       </div>
-                      <span className="text-[6px] font-bold text-tarco-red uppercase tracking-widest mt-0.5">The Legend of Africa</span>
+                      <h2 className="text-4xl font-black text-tarco-navy">{t.success.title}</h2>
+                      <p className="text-slate-500">{t.success.subtitle} {to} {t.success.begins}</p>
                     </div>
-                    <span className="text-xs font-bold opacity-60 uppercase tracking-widest">{t.success.boardingPass}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="text-3xl font-black">KRT</h4>
-                      <p className="text-[10px] font-bold opacity-60 uppercase">Khartoum</p>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-12 h-[1px] bg-white/20"></div>
-                      <Plane size={14} className="text-tarco-gold" />
-                      <div className="w-12 h-[1px] bg-white/20"></div>
-                    </div>
-                    <div className="text-right">
-                      <h4 className="text-3xl font-black">DXB</h4>
-                      <p className="text-[10px] font-bold opacity-60 uppercase">Dubai</p>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="p-8 space-y-8 relative">
-                  {/* Perforated Line */}
-                  <div className="absolute top-0 left-0 right-0 flex justify-between px-4 -translate-y-1/2">
-                    <div className="w-6 h-6 bg-slate-50 rounded-full -ml-7"></div>
-                    <div className="border-t-2 border-dashed border-slate-100 flex-grow mt-3"></div>
-                    <div className="w-6 h-6 bg-slate-50 rounded-full -mr-7"></div>
-                  </div>
+                    {/* Digital Boarding Pass */}
+                    <motion.div
+                      initial={{ y: 40, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="w-full max-w-sm bg-white rounded-[32px] overflow-hidden shadow-2xl border border-slate-100"
+                    >
+                      <div className="bg-tarco-blue p-8 text-white space-y-6">
+                        <div className="flex justify-between items-center">
+                          <div className="flex flex-col leading-none">
+                            <div className="flex items-center gap-0.5">
+                              <span className="font-black tracking-tighter text-tarco-red">TARCO</span>
+                              <span className="font-black tracking-tighter text-white">AVIATION</span>
+                            </div>
+                            <span className="text-[6px] font-bold text-tarco-red uppercase tracking-widest mt-0.5">The Legend of Africa</span>
+                          </div>
+                          <span className="text-xs font-bold opacity-60 uppercase tracking-widest">{t.success.boardingPass}</span>
+                        </div>
 
-                  <div className="grid grid-cols-2 gap-y-6">
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{t.success.passenger}</p>
-                      <p className="font-bold text-tarco-navy">Y. Seddig</p>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="text-3xl font-black">KRT</h4>
+                            <p className="text-[10px] font-bold opacity-60 uppercase">Khartoum</p>
+                          </div>
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="w-12 h-[1px] bg-white/20"></div>
+                            <Plane size={14} className="text-tarco-gold" />
+                            <div className="w-12 h-[1px] bg-white/20"></div>
+                          </div>
+                          <div className="text-right">
+                            <h4 className="text-3xl font-black">DXB</h4>
+                            <p className="text-[10px] font-bold opacity-60 uppercase">Dubai</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-8 space-y-8 relative">
+                        {/* Perforated Line */}
+                        <div className="absolute top-0 left-0 right-0 flex justify-between px-4 -translate-y-1/2">
+                          <div className="w-6 h-6 bg-slate-50 rounded-full -ml-7"></div>
+                          <div className="border-t-2 border-dashed border-slate-100 flex-grow mt-3"></div>
+                          <div className="w-6 h-6 bg-slate-50 rounded-full -mr-7"></div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-y-6">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.success.passenger}</p>
+                            <p className="font-bold text-tarco-navy">Y. Seddig</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.success.flight}</p>
+                            <p className="font-bold text-tarco-navy">TRC 402</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.booking.date}</p>
+                            <p className="font-bold text-tarco-navy">14 APR 26</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Gate' : 'البوابة'}</p>
+                            <p className="font-bold text-tarco-navy">B12</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.seats.seat}</p>
+                            <p className="font-bold text-tarco-navy">{selectedSeat?.label}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Class' : 'الدرجة'}</p>
+                            <p className="font-bold text-tarco-navy">{selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-center pt-4 space-y-4">
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <QrCode size={120} className="text-tarco-navy" />
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-300 tracking-[0.3em]">TRC-99283-XJ-01</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-50 p-6 flex flex-col gap-3">
+                        <button className="w-full bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">
+                          <Wallet size={18} />
+                          {t.success.wallet}
+                        </button>
+                        <button className="w-full bg-white border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm hover:bg-slate-50 transition-colors">
+                          <Download size={18} />
+                          {lang === 'en' ? 'Download PDF' : 'تحميل بصيغة PDF'}
+                        </button>
+                      </div>
+                    </motion.div>
+
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-tarco-navy font-bold hover:underline"
+                    >
+                      {t.success.bookAnother}
+                    </button>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Upgrade Modal */}
+        <AnimatePresence>
+          {showUpgradeModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowUpgradeModal(false)}
+                className="absolute inset-0 bg-tarco-navy/80 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative bg-white rounded-[32px] overflow-hidden max-w-2xl w-full shadow-2xl"
+              >
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="absolute top-6 right-6 z-20 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full backdrop-blur-md transition-all"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2">
+                  <div className="h-64 md:h-auto relative">
+                    <img
+                      src={assets['upgrade_bg'] || "https://picsum.photos/seed/luxury-cabin/800/1200"}
+                      alt="Business Class"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-tarco-navy/80 to-transparent md:bg-gradient-to-r"></div>
+                  </div>
+                  <div className="p-10 space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-tarco-gold">
+                        <Star size={16} fill="currentColor" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">{t.upgrade.subtitle}</span>
+                      </div>
+                      <h3 className="text-3xl font-black text-tarco-navy leading-tight">{t.upgrade.title}</h3>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{t.success.flight}</p>
-                      <p className="font-bold text-tarco-navy">TRC 402</p>
+
+                    <p className="text-slate-500 text-sm leading-relaxed">
+                      {t.upgrade.desc}
+                    </p>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-tarco-navy">
+                          <Wifi size={14} />
+                        </div>
+                        Free High-Speed Wi-Fi
+                      </div>
+                      <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-tarco-navy">
+                          <Coffee size={14} />
+                        </div>
+                        Premium Dining Experience
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{t.booking.date}</p>
-                      <p className="font-bold text-tarco-navy">14 APR 26</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Gate' : 'البوابة'}</p>
-                      <p className="font-bold text-tarco-navy">B12</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{t.seats.seat}</p>
-                      <p className="font-bold text-tarco-navy">{selectedSeat?.label}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Class' : 'الدرجة'}</p>
-                      <p className="font-bold text-tarco-navy">{selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business}</p>
+
+                    <div className="pt-4 flex flex-col gap-3">
+                      <button
+                        onClick={() => {
+                          setSelectedFare(FARES[2]);
+                          setShowUpgradeModal(false);
+                          setStep('success');
+                        }}
+                        className="w-full bg-tarco-red text-white py-4 rounded-2xl font-black shadow-lg hover:bg-red-600 transition-all active:scale-95"
+                      >
+                        {t.upgrade.button}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUpgradeModal(false);
+                          setStep('success');
+                        }}
+                        className="w-full py-2 text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors"
+                      >
+                        {t.upgrade.no}
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex flex-col items-center pt-4 space-y-4">
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <QrCode size={120} className="text-tarco-navy" />
-                    </div>
-                    <p className="text-[10px] font-bold text-slate-300 tracking-[0.3em]">TRC-99283-XJ-01</p>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 p-6 flex flex-col gap-3">
-                  <button className="w-full bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">
-                    <Wallet size={18} />
-                    {t.success.wallet}
-                  </button>
-                  <button className="w-full bg-white border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm hover:bg-slate-50 transition-colors">
-                    <Download size={18} />
-                    {lang === 'en' ? 'Download PDF' : 'تحميل بصيغة PDF'}
-                  </button>
                 </div>
               </motion.div>
-
-              <button 
-                onClick={() => window.location.reload()}
-                className="text-tarco-navy font-bold hover:underline"
-              >
-                {t.success.bookAnother}
-              </button>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
-      )}
-    </AnimatePresence>
-    </div>
+        </AnimatePresence>
 
-      {/* Upgrade Modal */}
-      <AnimatePresence>
-        {showUpgradeModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowUpgradeModal(false)}
-              className="absolute inset-0 bg-tarco-navy/80 backdrop-blur-sm"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white rounded-[32px] overflow-hidden max-w-2xl w-full shadow-2xl"
-            >
-              <button 
-                onClick={() => setShowUpgradeModal(false)}
-                className="absolute top-6 right-6 z-20 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full backdrop-blur-md transition-all"
-              >
-                <X size={20} />
-              </button>
+        {/* Footer */}
+        <footer className="mt-24 bg-tarco-blue py-24 px-6 text-white">
+          <div className="max-w-7xl mx-auto space-y-16">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+              <img
+                src={assets['logo_footer'] || "/Images/logo_footer.png"}
+                alt="Tarco Aviation"
+                className="h-12 w-auto brightness-0 invert"
+                referrerPolicy="no-referrer"
+              />
+              <div className="flex gap-12 text-xs font-bold uppercase tracking-widest">
+                <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Privacy' : 'الخصوصية'}</a>
+                <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Terms' : 'الشروط'}</a>
+                <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Contact' : 'اتصل بنا'}</a>
+              </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="h-64 md:h-auto relative">
-                  <img 
-                    src={assets['upgrade_bg'] || "https://picsum.photos/seed/luxury-cabin/800/1200"} 
-                    alt="Business Class" 
-                    className="absolute inset-0 w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-tarco-navy/80 to-transparent md:bg-gradient-to-r"></div>
-                </div>
-                <div className="p-10 space-y-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-tarco-gold">
-                      <Star size={16} fill="currentColor" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{t.upgrade.subtitle}</span>
-                    </div>
-                    <h3 className="text-3xl font-black text-tarco-navy leading-tight">{t.upgrade.title}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pt-16 border-t border-white/10">
+              <div className="space-y-4">
+                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'About Tarco' : 'عن تاركو'}</h4>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  {t.excellence.desc}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Network' : 'شبكة وجهاتنا'}</h4>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  {lang === 'en' ? 'Connecting major cities including Khartoum, Dubai, Riyadh, Cairo, and Addis Ababa with modern aircraft and exceptional service.' : 'نربط المدن الكبرى بما في ذلك الخرطوم ودبي والرياض والقاهرة وأديس أبابا بطائرات حديثة وخدمة استثنائية.'}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Offices' : 'مكاتبنا'}</h4>
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
+                      <MapPin size={10} className="text-tarco-gold" />
+                      {t.contacts.headOffice}
+                    </p>
+                    <p className="text-xs text-slate-400">{t.contacts.headAddress}</p>
+                    <p className="text-[10px] text-slate-500 flex items-center gap-2">
+                      <Mail size={10} />
+                      we.care@tarcoaviation.com
+                    </p>
                   </div>
-                  
-                  <p className="text-slate-500 text-sm leading-relaxed">
-                    {t.upgrade.desc}
-                  </p>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-tarco-navy">
-                        <Wifi size={14} />
-                      </div>
-                      Free High-Speed Wi-Fi
-                    </div>
-                    <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-tarco-navy">
-                        <Coffee size={14} />
-                      </div>
-                      Premium Dining Experience
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex flex-col gap-3">
-                    <button 
-                      onClick={() => {
-                        setSelectedFare(FARES[2]);
-                        setShowUpgradeModal(false);
-                        setStep('success');
-                      }}
-                      className="w-full bg-tarco-red text-white py-4 rounded-2xl font-black shadow-lg hover:bg-red-600 transition-all active:scale-95"
-                    >
-                      {t.upgrade.button}
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setShowUpgradeModal(false);
-                        setStep('success');
-                      }}
-                      className="w-full py-2 text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors"
-                    >
-                      {t.upgrade.no}
-                    </button>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
+                      <MapPin size={10} className="text-tarco-gold" />
+                      {t.contacts.madaniOffice}
+                    </p>
+                    <p className="text-xs text-slate-400">{t.contacts.madaniAddress}</p>
+                    <p className="text-[10px] text-slate-500 flex items-center gap-2">
+                      <Phone size={10} />
+                      0120011082
+                    </p>
+                    <p className="text-[10px] text-slate-500 flex items-center gap-2">
+                      <Mail size={10} />
+                      madani.office@tarcoaviation.com
+                    </p>
                   </div>
                 </div>
               </div>
-            </motion.div>
+              <div className="space-y-4">
+                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Newsletter' : 'النشرة البريدية'}</h4>
+                <div className="flex gap-2">
+                  <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-gold" placeholder={lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'} />
+                  <button className="bg-tarco-red px-4 py-2 rounded-lg font-bold text-xs">{lang === 'en' ? 'Join' : 'اشترك'}</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-16 border-t border-white/10 text-[10px] text-slate-500 font-medium uppercase tracking-widest">
+              <p>© 2026 {t.brand.first} {t.brand.second}. All rights reserved.</p>
+              <div className="flex items-center gap-6">
+                {user?.email === 'YSeddig15@gmail.com' && (
+                  <a
+                    href="https://console.firebase.google.com/project/gen-lang-client-0834655921/firestore/databases/ai-studio-2c905c97-48ea-4e14-877c-1bd9ef21ebd9/data"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-tarco-gold hover:underline flex items-center gap-2"
+                  >
+                    <ShieldCheck size={12} />
+                    Manage Assets
+                  </a>
+                )}
+                <p>The Legend of Africa</p>
+              </div>
+            </div>
           </div>
+        </footer>
+          </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Footer */}
-      <footer className="mt-24 bg-tarco-blue py-24 px-6 text-white">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <img 
-              src={assets['logo_footer'] || "/Images/logo_footer.png"} 
-              alt="Tarco Aviation" 
-              className="h-12 w-auto brightness-0 invert"
-              referrerPolicy="no-referrer"
-            />
-            <div className="flex gap-12 text-xs font-bold uppercase tracking-widest">
-              <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Privacy' : 'الخصوصية'}</a>
-              <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Terms' : 'الشروط'}</a>
-              <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Contact' : 'اتصل بنا'}</a>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pt-16 border-t border-white/10">
-            <div className="space-y-4">
-              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'About Tarco' : 'عن تاركو'}</h4>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {t.excellence.desc}
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Network' : 'شبكة وجهاتنا'}</h4>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {lang === 'en' ? 'Connecting major cities including Khartoum, Dubai, Riyadh, Cairo, and Addis Ababa with modern aircraft and exceptional service.' : 'نربط المدن الكبرى بما في ذلك الخرطوم ودبي والرياض والقاهرة وأديس أبابا بطائرات حديثة وخدمة استثنائية.'}
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Offices' : 'مكاتبنا'}</h4>
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
-                    <MapPin size={10} className="text-tarco-gold" />
-                    {t.contacts.headOffice}
-                  </p>
-                  <p className="text-xs text-slate-400">{t.contacts.headAddress}</p>
-                  <p className="text-[10px] text-slate-500 flex items-center gap-2">
-                    <Mail size={10} />
-                    we.care@tarcoaviation.com
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
-                    <MapPin size={10} className="text-tarco-gold" />
-                    {t.contacts.madaniOffice}
-                  </p>
-                  <p className="text-xs text-slate-400">{t.contacts.madaniAddress}</p>
-                  <p className="text-[10px] text-slate-500 flex items-center gap-2">
-                    <Phone size={10} />
-                    0120011082
-                  </p>
-                  <p className="text-[10px] text-slate-500 flex items-center gap-2">
-                    <Mail size={10} />
-                    madani.office@tarcoaviation.com
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Newsletter' : 'النشرة البريدية'}</h4>
-              <div className="flex gap-2">
-                <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-gold" placeholder={lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'} />
-                <button className="bg-tarco-red px-4 py-2 rounded-lg font-bold text-xs">{lang === 'en' ? 'Join' : 'اشترك'}</button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-16 border-t border-white/10 text-[10px] text-slate-500 font-medium uppercase tracking-widest">
-            <p>© 2026 {t.brand.first} {t.brand.second}. All rights reserved.</p>
-            <div className="flex items-center gap-6">
-              {user?.email === 'YSeddig15@gmail.com' && (
-                <a 
-                  href="https://console.firebase.google.com/project/gen-lang-client-0834655921/firestore/databases/ai-studio-2c905c97-48ea-4e14-877c-1bd9ef21ebd9/data" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-tarco-gold hover:underline flex items-center gap-2"
-                >
-                  <ShieldCheck size={12} />
-                  Manage Assets
-                </a>
-              )}
-              <p>The Legend of Africa</p>
-            </div>
-          </div>
-        </div>
-      </footer>
-      </div>
     </>
   );
 }
