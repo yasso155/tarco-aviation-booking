@@ -2135,7 +2135,7 @@ export default function App() {
                     <div className="absolute inset-0 bg-gradient-to-b from-[#041438]/85 via-[#041438]/50 to-[#041438]/95 pointer-events-none z-20" />
                   </div>
 
-                  <div className="absolute inset-0 flex flex-col justify-center pb-16 md:pb-28 px-5 md:px-12 lg:px-24 z-30 pointer-events-none">
+                  <div className="absolute inset-0 flex flex-col justify-center pb-6 md:pb-28 px-5 md:px-12 lg:px-24 z-30 pointer-events-none">
                     <motion.div
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
