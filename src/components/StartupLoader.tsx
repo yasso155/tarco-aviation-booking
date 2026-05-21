@@ -100,12 +100,6 @@ export const StartupLoader: React.FC<StartupLoaderProps> = ({ onComplete }) => {
             />
           </div>
 
-          {/* Shimmer Overlay */}
-          <motion.div
-            animate={{ x: ['100%', '-100%'] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] pointer-events-none"
-          />
         </div>
 
         {/* Brand Text */}
