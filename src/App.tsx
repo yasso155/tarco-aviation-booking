@@ -995,6 +995,176 @@ function StatCard({ stat, lang }: { stat: { label: string; value: number; suffix
   );
 }
 
+interface MockFlight {
+  id: string;
+  flightNo: string;
+  from: { en: string; ar: string };
+  to: { en: string; ar: string };
+  fromCode: string;
+  toCode: string;
+  status: { en: 'On Time' | 'Delayed' | 'Landed' | 'Scheduled'; ar: string };
+  departure: string;
+  arrival: string;
+  terminal: string;
+  gate: string;
+}
+
+interface MockRequirement {
+  id: string;
+  destination: { en: string; ar: string };
+  visa: { en: string; ar: string };
+  passport: { en: string; ar: string };
+  health: { en: string; ar: string };
+}
+
+const MOCK_FLIGHTS: MockFlight[] = [
+  {
+    id: 'trq101',
+    flightNo: 'TRQ-101',
+    from: { en: 'Khartoum', ar: 'الخرطوم' },
+    to: { en: 'Dubai', ar: 'دبي' },
+    fromCode: 'KRT',
+    toCode: 'DXB',
+    status: { en: 'On Time', ar: 'في موعدها' },
+    departure: '10:30',
+    arrival: '15:45',
+    terminal: 'T1',
+    gate: 'B12'
+  },
+  {
+    id: 'trq102',
+    flightNo: 'TRQ-102',
+    from: { en: 'Dubai', ar: 'دبي' },
+    to: { en: 'Khartoum', ar: 'الخرطوم' },
+    fromCode: 'DXB',
+    toCode: 'KRT',
+    status: { en: 'Delayed', ar: 'متأخرة' },
+    departure: '17:00',
+    arrival: '20:15',
+    terminal: 'T3',
+    gate: 'A4'
+  },
+  {
+    id: 'trq201',
+    flightNo: 'TRQ-201',
+    from: { en: 'Khartoum', ar: 'الخرطوم' },
+    to: { en: 'Cairo', ar: 'القاهرة' },
+    fromCode: 'KRT',
+    toCode: 'CAI',
+    status: { en: 'Landed', ar: 'هبطت' },
+    departure: '08:00',
+    arrival: '10:30',
+    terminal: 'T2',
+    gate: 'C8'
+  },
+  {
+    id: 'trq202',
+    flightNo: 'TRQ-202',
+    from: { en: 'Cairo', ar: 'القاهرة' },
+    to: { en: 'Khartoum', ar: 'الخرطوم' },
+    fromCode: 'CAI',
+    toCode: 'KRT',
+    status: { en: 'Scheduled', ar: 'مجدولة' },
+    departure: '11:45',
+    arrival: '14:15',
+    terminal: 'T1',
+    gate: 'G2'
+  },
+  {
+    id: 'trq301',
+    flightNo: 'TRQ-301',
+    from: { en: 'Khartoum', ar: 'الخرطوم' },
+    to: { en: 'Riyadh', ar: 'الرياض' },
+    fromCode: 'KRT',
+    toCode: 'RUH',
+    status: { en: 'On Time', ar: 'في موعدها' },
+    departure: '13:15',
+    arrival: '16:30',
+    terminal: 'T1',
+    gate: 'D5'
+  },
+  {
+    id: 'trq302',
+    flightNo: 'TRQ-302',
+    from: { en: 'Riyadh', ar: 'الرياض' },
+    to: { en: 'Khartoum', ar: 'الخرطوم' },
+    fromCode: 'RUH',
+    toCode: 'KRT',
+    status: { en: 'Scheduled', ar: 'مجدولة' },
+    departure: '18:00',
+    arrival: '21:15',
+    terminal: 'T2',
+    gate: 'F15'
+  }
+];
+
+const MOCK_REQUIREMENTS: MockRequirement[] = [
+  {
+    id: 'uae',
+    destination: { en: 'Dubai / Sharjah (UAE)', ar: 'دبي / الشارقة (الإمارات)' },
+    visa: {
+      en: 'Pre-arranged UAE visa or Visa on Arrival required for eligible passport holders. Tourist visa can be easily applied online.',
+      ar: 'تأشيرة الإمارات المسبقة أو تأشيرة عند الوصول مطلوبة لحاملي جوازات السفر المؤهلة. يمكن التقديم بسهولة عبر الإنترنت.'
+    },
+    passport: {
+      en: 'Your passport must be valid for at least 6 months from your travel date.',
+      ar: 'يجب أن يكون جواز سفرك صالحاً لمدة 6 أشهر على الأقل من تاريخ سفرك.'
+    },
+    health: {
+      en: 'No current COVID-19 testing or vaccination requirements. Standard travel insurance highly recommended.',
+      ar: 'لا توجد متطلبات فحص أو تطعيم حالية لكورونا. ينصح بشدة بالتأمين الصحي العادي للسفر.'
+    }
+  },
+  {
+    id: 'egypt',
+    destination: { en: 'Cairo (Egypt)', ar: 'القاهرة (مصر)' },
+    visa: {
+      en: 'Visa required for most foreign nationals. Entry visa-on-arrival is available for specific nationalities paying USD 25 in cash.',
+      ar: 'التأشيرة مطلوبة لمعظم الجنسيات الأجنبية. تأشيرة الدخول عند الوصول متاحة لجنسيات محددة مقابل 25 دولار أمريكي نقداً.'
+    },
+    passport: {
+      en: 'Passport must be valid for a minimum of 6 months beyond the date of arrival.',
+      ar: 'يجب أن يكون جواز السفر صالحاً لمدة 6 أشهر على الأقل بعد تاريخ الوصول.'
+    },
+    health: {
+      en: 'Yellow fever vaccination certificate required if arriving from infected areas. Basic health checks may be performed.',
+      ar: 'شهادة تطعيم ضد الحمى الصفراء مطلوبة للقادمين من مناطق موبوءة. قد يتم إجراء فحوصات صحية أساسية.'
+    }
+  },
+  {
+    id: 'saudi',
+    destination: { en: 'Riyadh / Jeddah / Dammam (Saudi Arabia)', ar: 'الرياض / جدة / الدمام (السعودية)' },
+    visa: {
+      en: 'Tourist eVisa, Umrah visa, or visa on arrival is required. Citizens of GCC countries are exempt.',
+      ar: 'تأشيرة سياحة إلكترونية، تأشيرة عمرة، أو تأشيرة عند الوصول مطلوبة. مواطنو دول مجلس التعاون الخليجي معفون.'
+    },
+    passport: {
+      en: 'Passport must be valid for at least 6 months. Resident permit holders require exit/re-entry visa.',
+      ar: 'يجب أن يكون جواز السفر صالحاً لـ 6 أشهر على الأقل. حاملو الإقامة السعودية يحتاجون لتأشيرة خروج وعودة.'
+    },
+    health: {
+      en: 'Meningitis and other vaccination certificates might be required for Umrah/Hajj travelers depending on season.',
+      ar: 'قد تكون شهادات التطعيم ضد التهاب السحايا وغيرها مطلوبة للمعتمرين والحجاج حسب الموسم.'
+    }
+  },
+  {
+    id: 'portsudan',
+    destination: { en: 'Port Sudan (Sudan)', ar: 'بورتسودان (السودان)' },
+    visa: {
+      en: 'Sudanese entry visa or permit is required for all foreign nationals prior to arrival.',
+      ar: 'تأشيرة دخول سودانية أو تصريح دخول مطلوب لجميع الرعايا الأجانب قبل الوصول.'
+    },
+    passport: {
+      en: 'Passport must be valid for at least 6 months with no Israeli stamps or visas.',
+      ar: 'يجب أن يكون جواز السفر صالحاً لمدة 6 أشهر على الأقل وألا يحتوي على أختام أو تأشيرات إسرائيلية.'
+    },
+    health: {
+      en: 'Standard vaccinations up to date. Cholera/yellow fever checks depending on origin country.',
+      ar: 'التطعيمات القياسية محدثة. فحوصات الكوليرا/الحمى الصفراء تعتمد على بلد القدوم.'
+    }
+  }
+];
+
 // --- Main App ---
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1504,6 +1674,18 @@ export default function App() {
   }, [departureDate, returnDate, selectedClass, selectedCurrency, isRoundTrip]);
 
   const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSearchFlight, setSelectedSearchFlight] = useState<any | null>(null);
+  const [selectedSearchRequirement, setSelectedSearchRequirement] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!showSearch) {
+      setSearchQuery('');
+      setSelectedSearchFlight(null);
+      setSelectedSearchRequirement(null);
+    }
+  }, [showSearch]);
+
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
@@ -1777,7 +1959,7 @@ export default function App() {
               initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
               animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
               exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-              className="fixed inset-0 z-[200] bg-tarco-blue/90 flex flex-col items-center justify-center p-6"
+              className="fixed inset-0 z-[200] bg-tarco-blue/95 flex flex-col items-center justify-center p-6 overflow-y-auto"
             >
               <button
                 onClick={() => setShowSearch(false)}
@@ -1785,7 +1967,7 @@ export default function App() {
               >
                 <X size={40} strokeWidth={1} />
               </button>
-              <div className="w-full max-w-4xl space-y-12">
+              <div className="w-full max-w-4xl space-y-8 my-auto">
                 <div className="space-y-4 text-center">
                   <h2 className="text-4xl md:text-6xl font-extralight text-white tracking-tight">{t.search.overlayTitle}</h2>
                   <p className="text-white/40 text-lg">{t.search.overlaySubtitle}</p>
@@ -1795,29 +1977,236 @@ export default function App() {
                   <input
                     autoFocus
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setSelectedSearchFlight(null);
+                      setSelectedSearchRequirement(null);
+                    }}
                     placeholder={t.search.placeholder}
                     className="w-full bg-white/5 border-b-2 border-white/10 py-8 ps-20 pe-8 text-3xl md:text-5xl font-light text-white outline-none focus:border-tarco-red transition-colors placeholder:text-white/20"
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-                  {[
-                    { key: 'destinations', label: t.search.categories.destinations },
-                    { key: 'status', label: t.search.categories.status },
-                    { key: 'requirements', label: t.search.categories.requirements }
-                  ].map((cat) => (
-                    <div key={cat.key} className="space-y-4">
-                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-red">{cat.label}</h3>
-                      <div className="flex flex-col gap-2">
-                        {[1, 2, 3].map(i => (
-                          <button key={i} className="text-start text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group">
-                            <ArrowRightLeft size={16} className={`opacity-0 group-hover:opacity-100 transition-all ${lang === 'ar' ? 'translate-x-2 group-hover:translate-x-0' : '-translate-x-2 group-hover:translate-x-0'}`} />
-                            {cat.key === 'destinations' ? (lang === 'en' ? ['Dubai (DXB)', 'Cairo (CAI)', 'Riyadh (RUH)'][i - 1] : ['دبي (DXB)', 'القاهرة (CAI)', 'الرياض (RUH)'][i - 1]) : cat.label + ' ' + i}
-                          </button>
-                        ))}
+
+                {selectedSearchFlight ? (
+                  /* Detailed Flight Status Card */
+                  <div className="bg-white/5 rounded-3xl p-8 border border-white/10 space-y-6 relative overflow-hidden backdrop-blur-md max-w-xl mx-auto animate-fade">
+                    <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className="px-3 py-1 bg-tarco-red text-white text-xs font-black uppercase rounded-lg">
+                          {selectedSearchFlight.flightNo}
+                        </div>
+                        <span className="text-white/60 text-sm font-semibold">
+                          {lang === 'en' ? 'Flight Status Details' : 'تفاصيل حالة الرحلة'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedSearchFlight(null)}
+                        className="text-xs text-tarco-red font-bold hover:underline"
+                      >
+                        {lang === 'en' ? '← Back' : 'العودة →'}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6 items-center py-4">
+                      <div className="text-start">
+                        <div className="text-4xl font-black text-white">{selectedSearchFlight.fromCode}</div>
+                        <div className="text-xs text-white/50">{selectedSearchFlight.from[lang]}</div>
+                        <div className="text-xl font-bold text-white mt-2">{selectedSearchFlight.departure}</div>
+                      </div>
+                      <div className="text-end">
+                        <div className="text-4xl font-black text-white">{selectedSearchFlight.toCode}</div>
+                        <div className="text-xs text-white/50">{selectedSearchFlight.to[lang]}</div>
+                        <div className="text-xl font-bold text-white mt-2">{selectedSearchFlight.arrival}</div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    
+                    {/* Status Badge & info */}
+                    <div className="p-4 bg-white/5 rounded-2xl flex justify-between items-center">
+                      <div className="text-start">
+                        <div className="text-[10px] uppercase text-white/40 font-bold">
+                          {lang === 'en' ? 'Status' : 'الحالة'}
+                        </div>
+                        <div className={`text-lg font-black mt-0.5 ${
+                          selectedSearchFlight.status.en === 'Delayed' ? 'text-amber-400' : 'text-emerald-400'
+                        }`}>
+                          {selectedSearchFlight.status[lang]}
+                        </div>
+                      </div>
+                      <div className="text-end">
+                        <div className="text-xs text-white/60">
+                          {lang === 'en' ? `Terminal ${selectedSearchFlight.terminal}` : `صالة ${selectedSearchFlight.terminal}`}
+                        </div>
+                        <div className="text-[10px] text-white/40 mt-0.5">
+                          {lang === 'en' ? `Gate ${selectedSearchFlight.gate}` : `بوابة ${selectedSearchFlight.gate}`}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : selectedSearchRequirement ? (
+                  /* Detailed Travel Requirement Card */
+                  <div className="bg-white/5 rounded-3xl p-8 border border-white/10 space-y-6 relative overflow-hidden backdrop-blur-md max-w-xl mx-auto animate-fade">
+                    <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                      <h3 className="text-lg font-bold text-white">
+                        {selectedSearchRequirement.destination[lang]}
+                      </h3>
+                      <button
+                        onClick={() => setSelectedSearchRequirement(null)}
+                        className="text-xs text-tarco-red font-bold hover:underline"
+                      >
+                        {lang === 'en' ? '← Back' : 'العودة →'}
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="space-y-1 text-start">
+                        <h4 className="text-xs font-black uppercase text-tarco-red tracking-wider">
+                          {lang === 'en' ? 'Visa Guidelines' : 'إرشادات التأشيرة'}
+                        </h4>
+                        <p className="text-sm text-white/80 leading-relaxed font-light">
+                          {selectedSearchRequirement.visa[lang]}
+                        </p>
+                      </div>
+                      <div className="space-y-1 text-start">
+                        <h4 className="text-xs font-black uppercase text-tarco-red tracking-wider">
+                          {lang === 'en' ? 'Passport Validity' : 'صلاحية جواز السفر'}
+                        </h4>
+                        <p className="text-sm text-white/80 leading-relaxed font-light">
+                          {selectedSearchRequirement.passport[lang]}
+                        </p>
+                      </div>
+                      <div className="space-y-1 text-start">
+                        <h4 className="text-xs font-black uppercase text-tarco-red tracking-wider">
+                          {lang === 'en' ? 'Health & Vaccination' : 'الإجراءات الصحية والتطعيم'}
+                        </h4>
+                        <p className="text-sm text-white/80 leading-relaxed font-light">
+                          {selectedSearchRequirement.health[lang]}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Category Grids */
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
+                    {/* Destinations Category */}
+                    <div className="space-y-4 text-start">
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-red">
+                        {t.search.categories.destinations}
+                      </h3>
+                      <div className="flex flex-col gap-2">
+                        {DESTINATIONS.filter(dest => {
+                          if (dest.id === 'khartoum') return false; // Exclude origin
+                          if (!searchQuery) {
+                            return ['dubai', 'cairo', 'riyadh'].includes(dest.id);
+                          }
+                          const query = searchQuery.toLowerCase();
+                          return dest.name[lang].toLowerCase().includes(query) ||
+                                 dest.code.toLowerCase().includes(query) ||
+                                 dest.country[lang].toLowerCase().includes(query);
+                        }).slice(0, 5).map(dest => (
+                          <button
+                            key={dest.id}
+                            onClick={() => {
+                              setToCityId(dest.id);
+                              setShowSearch(false);
+                              setStep('search');
+                              setTimeout(() => {
+                                bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }, 100);
+                            }}
+                            className="text-start text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group"
+                          >
+                            <ArrowRightLeft size={16} className={`opacity-0 group-hover:opacity-100 transition-all ${lang === 'ar' ? 'translate-x-2 group-hover:translate-x-0' : '-translate-x-2 group-hover:translate-x-0'}`} />
+                            <span>{dest.name[lang]} ({dest.code})</span>
+                          </button>
+                        ))}
+                        {DESTINATIONS.filter(dest => {
+                          if (dest.id === 'khartoum') return false;
+                          const query = searchQuery.toLowerCase();
+                          return dest.name[lang].toLowerCase().includes(query) ||
+                                 dest.code.toLowerCase().includes(query) ||
+                                 dest.country[lang].toLowerCase().includes(query);
+                        }).length === 0 && (
+                          <span className="text-xs text-white/30 italic">
+                            {lang === 'en' ? 'No destinations found' : 'لم يتم العثور على وجهات'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Flight Status Category */}
+                    <div className="space-y-4 text-start">
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-red">
+                        {t.search.categories.status}
+                      </h3>
+                      <div className="flex flex-col gap-2">
+                        {MOCK_FLIGHTS.filter(flight => {
+                          if (!searchQuery) return ['trq101', 'trq201', 'trq301'].includes(flight.id);
+                          const query = searchQuery.toLowerCase();
+                          return flight.flightNo.toLowerCase().includes(query) ||
+                                 flight.from[lang].toLowerCase().includes(query) ||
+                                 flight.to[lang].toLowerCase().includes(query) ||
+                                 flight.fromCode.toLowerCase().includes(query) ||
+                                 flight.toCode.toLowerCase().includes(query);
+                        }).slice(0, 5).map(flight => (
+                          <button
+                            key={flight.id}
+                            onClick={() => setSelectedSearchFlight(flight)}
+                            className="text-start text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group"
+                          >
+                            <ArrowRightLeft size={16} className={`opacity-0 group-hover:opacity-100 transition-all ${lang === 'ar' ? 'translate-x-2 group-hover:translate-x-0' : '-translate-x-2 group-hover:translate-x-0'}`} />
+                            <span>{flight.flightNo} ({flight.fromCode} ➔ {flight.toCode})</span>
+                          </button>
+                        ))}
+                        {MOCK_FLIGHTS.filter(flight => {
+                          const query = searchQuery.toLowerCase();
+                          return flight.flightNo.toLowerCase().includes(query) ||
+                                 flight.from[lang].toLowerCase().includes(query) ||
+                                 flight.to[lang].toLowerCase().includes(query) ||
+                                 flight.fromCode.toLowerCase().includes(query) ||
+                                 flight.toCode.toLowerCase().includes(query);
+                        }).length === 0 && (
+                          <span className="text-xs text-white/30 italic">
+                            {lang === 'en' ? 'No flights found' : 'لم يتم العثور على رحلات'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Travel Requirements Category */}
+                    <div className="space-y-4 text-start">
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-red">
+                        {t.search.categories.requirements}
+                      </h3>
+                      <div className="flex flex-col gap-2">
+                        {MOCK_REQUIREMENTS.filter(req => {
+                          if (!searchQuery) return true;
+                          const query = searchQuery.toLowerCase();
+                          return req.destination[lang].toLowerCase().includes(query) ||
+                                 req.visa[lang].toLowerCase().includes(query) ||
+                                 req.passport[lang].toLowerCase().includes(query);
+                        }).slice(0, 5).map(req => (
+                          <button
+                            key={req.id}
+                            onClick={() => setSelectedSearchRequirement(req)}
+                            className="text-start text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group"
+                          >
+                            <ArrowRightLeft size={16} className={`opacity-0 group-hover:opacity-100 transition-all ${lang === 'ar' ? 'translate-x-2 group-hover:translate-x-0' : '-translate-x-2 group-hover:translate-x-0'}`} />
+                            <span>{req.destination[lang].split(' ')[0]}</span>
+                          </button>
+                        ))}
+                        {MOCK_REQUIREMENTS.filter(req => {
+                          const query = searchQuery.toLowerCase();
+                          return req.destination[lang].toLowerCase().includes(query) ||
+                                 req.visa[lang].toLowerCase().includes(query) ||
+                                 req.passport[lang].toLowerCase().includes(query);
+                        }).length === 0 && (
+                          <span className="text-xs text-white/30 italic">
+                            {lang === 'en' ? 'No requirements found' : 'لم يتم العثور على إرشادات'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
