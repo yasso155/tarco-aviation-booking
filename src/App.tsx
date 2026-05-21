@@ -2513,7 +2513,7 @@ export default function App() {
                   <div className="absolute inset-0 overflow-hidden">
                     {/* Fallback Background Image behind the Canvas */}
                     <div 
-                      className="absolute inset-0 bg-cover bg-[position:70%_center] md:bg-center bg-no-repeat opacity-65 md:opacity-50"
+                      className="absolute inset-0 bg-cover bg-[position:70%_center] md:bg-center bg-no-repeat opacity-100"
                       style={{ backgroundImage: `url(${assets['hero_bg'] || '/Images/hero_bg.png'})` }}
                     />
                     <canvas 
@@ -2521,7 +2521,6 @@ export default function App() {
                       id="canvas3d" 
                       className="hidden md:block absolute inset-0 w-full h-full outline-none border-none z-10 opacity-70 pointer-events-none"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#041438]/85 via-[#041438]/50 to-[#041438]/95 pointer-events-none z-20" />
                   </div>
 
                   <div className="absolute inset-0 flex flex-col justify-center pb-6 md:pb-28 px-5 md:px-12 lg:px-24 z-30 pointer-events-none">
@@ -2529,7 +2528,7 @@ export default function App() {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5, duration: 1 }}
-                      className="max-w-3xl space-y-4 md:space-y-6 text-start"
+                      className="max-w-3xl space-y-4 md:space-y-6 text-start drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
                     >
                       <div className="space-y-3 md:space-y-4 text-start">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-white text-start">
