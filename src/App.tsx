@@ -109,13 +109,25 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 }
 
 // --- Types ---
-type Step = 'search' | 'results' | 'services' | 'seats' | 'success';
+type Step = 'search' | 'results' | 'passengers' | 'services' | 'seats' | 'success';
 type Lang = 'en' | 'ar';
 
 interface PassengerCount {
   adults: number;
   children: number;
   infants: number;
+}
+
+interface PassengerInfo {
+  title: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  nationality: string;
+  passportNumber: string;
+  passportExpiry: string;
+  gender: string;
+  type: 'adult' | 'child' | 'infant';
 }
 
 interface ExtraService {
@@ -247,6 +259,7 @@ const TRANSLATIONS = {
     steps: {
       search: 'Search',
       results: 'Fares',
+      passengers: 'Passengers',
       services: 'Services',
       seats: 'Seats',
       success: 'Confirm'
@@ -284,6 +297,30 @@ const TRANSLATIONS = {
       select: 'Select Fare',
       back: 'Back to Search',
       continue: 'Continue to Services'
+    },
+    passengersDetails: {
+      title: 'Passenger Details',
+      subtitle: 'Please enter passenger names and passport details exactly as they appear in their travel documents.',
+      passengerNum: 'Passenger {num}',
+      leadPassenger: 'Lead Passenger',
+      adult: 'Adult',
+      child: 'Child',
+      infant: 'Infant',
+      gender: 'Gender',
+      male: 'Male',
+      female: 'Female',
+      titleLabel: 'Title',
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      dob: 'Date of Birth',
+      nationality: 'Nationality',
+      passportNumber: 'Passport Number',
+      passportExpiry: 'Passport Expiry Date',
+      contactInfo: 'Contact Information',
+      email: 'Email Address',
+      phone: 'Phone Number',
+      continue: 'Continue to Services',
+      back: 'Back to Fares'
     },
     services: {
       title: 'Enhance Your Experience',
@@ -535,6 +572,7 @@ const TRANSLATIONS = {
     steps: {
       search: 'البحث',
       results: 'الأسعار',
+      passengers: 'المسافرين',
       services: 'الخدمات',
       seats: 'المقاعد',
       success: 'تأكيد'
@@ -577,6 +615,30 @@ const TRANSLATIONS = {
       select: 'اختر السعر',
       back: 'العودة للبحث',
       continue: 'المتابعة للخدمات'
+    },
+    passengersDetails: {
+      title: 'بيانات المسافرين',
+      subtitle: 'يرجى إدخال أسماء المسافرين وتفاصيل جوازات السفر الخاصة بهم تماماً كما تظهر في وثائق السفر.',
+      passengerNum: 'المسافر {num}',
+      leadPassenger: 'المسافر الرئيسي',
+      adult: 'بالغ',
+      child: 'طفل',
+      infant: 'رضيع',
+      gender: 'الجنس',
+      male: 'ذكر',
+      female: 'أنثى',
+      titleLabel: 'اللقب',
+      firstName: 'الاسم الأول',
+      lastName: 'الاسم الأخير',
+      dob: 'تاريخ الميلاد',
+      nationality: 'الجنسية',
+      passportNumber: 'رقم جواز السفر',
+      passportExpiry: 'تاريخ انتهاء الجواز',
+      contactInfo: 'معلومات الاتصال',
+      email: 'البريد الإلكتروني',
+      phone: 'رقم الهاتف',
+      continue: 'المتابعة للخدمات',
+      back: 'العودة للأسعار'
     },
     services: {
       title: 'عزز تجربتك',
@@ -943,7 +1005,8 @@ export default function App() {
   const [navScrolled, setNavScrolled] = useState(false);
 
   useEffect(() => {
-    if (canvasRef.current) {
+    // Only load the heavy 3D Spline scene on desktop viewports to optimize mobile load time and CPU/battery usage
+    if (canvasRef.current && window.innerWidth >= 768) {
       const app = new Application(canvasRef.current);
       app.load('https://prod.spline.design/xK6dU3qCw-vltUIV/scene.splinecode');
     }
@@ -1080,11 +1143,7 @@ export default function App() {
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-        onClick={() => {
-          setToCityId(dest.id);
-          bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }}
-        className={`dest-card relative ${heightClass} rounded-[2rem] overflow-hidden shadow-xl group cursor-pointer w-full`}
+        className={`dest-card relative ${heightClass} rounded-[2rem] overflow-hidden shadow-xl group w-full`}
       >
         <SafeImage
           src={img}
@@ -1117,7 +1176,7 @@ export default function App() {
                   setToCityId(dest.id);
                   bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }}
-                className="w-full bg-tarco-red text-white py-3.5 rounded-full font-black uppercase tracking-widest text-xs shadow-lg shadow-red-900/30 transition-[background-color,transform] duration-150 hover:bg-red-700 active:scale-[0.97]"
+                className="w-full bg-tarco-red text-white py-3.5 rounded-full font-black uppercase tracking-widest text-xs shadow-lg shadow-red-900/30 transition-[background-color,transform] duration-150 hover:bg-red-700 active:scale-[0.97] cursor-pointer"
               >
                 {t.destinations.bookNow}
               </button>
@@ -1127,7 +1186,7 @@ export default function App() {
                   setToCityId(dest.id);
                   bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }}
-                className="inline-block text-white text-xs font-black uppercase tracking-widest border-b-2 border-white pb-0.5 transition-[color,border-color] duration-150 hover:text-tarco-red hover:border-tarco-red"
+                className="inline-block text-white text-xs font-black uppercase tracking-widest border-b-2 border-white pb-0.5 transition-[color,border-color] duration-150 hover:text-tarco-red hover:border-tarco-red cursor-pointer"
               >
                 {lang === 'en' ? 'Discover' : 'اكتشف'}
               </button>
@@ -1162,7 +1221,7 @@ export default function App() {
                     setToCityId(dest.id);
                     bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }}
-                  className={`w-full bg-tarco-red text-white ${isHalfWidth ? 'py-2.5 text-[9px]' : 'py-3 text-[10px]'} rounded-full font-black uppercase tracking-widest shadow-lg shadow-red-900/30 transition-[background-color,transform] duration-150 hover:bg-red-700 active:scale-[0.97]`}
+                  className={`w-full bg-tarco-red text-white ${isHalfWidth ? 'py-2.5 text-[9px]' : 'py-3 text-[10px]'} rounded-full font-black uppercase tracking-widest shadow-lg shadow-red-900/30 transition-[background-color,transform] duration-150 hover:bg-red-700 active:scale-[0.97] cursor-pointer`}
                 >
                   {t.destinations.bookNow}
                 </button>
@@ -1172,7 +1231,7 @@ export default function App() {
                     setToCityId(dest.id);
                     bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }}
-                  className={`inline-block text-white ${isHalfWidth ? 'text-[9px]' : 'text-[10px]'} font-black uppercase tracking-widest border-b border-white pb-0.5 transition-[color,border-color] duration-150 hover:text-tarco-red hover:border-tarco-red`}
+                  className={`inline-block text-white ${isHalfWidth ? 'text-[9px]' : 'text-[10px]'} font-black uppercase tracking-widest border-b border-white pb-0.5 transition-[color,border-color] duration-150 hover:text-tarco-red hover:border-tarco-red cursor-pointer`}
                 >
                   {lang === 'en' ? 'Discover' : 'اكتشف'}
                 </button>
@@ -1196,7 +1255,14 @@ export default function App() {
   const [selectedFare, setSelectedFare] = useState<Fare | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // --- Passenger Details States ---
+  const [passengerDetails, setPassengerDetails] = useState<PassengerInfo[]>([]);
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [passengerErrors, setPassengerErrors] = useState<Record<string, string>>({});
+  const [selectedSuccessPaxIdx, setSelectedSuccessPaxIdx] = useState(0);
+  const [selectedSuccessDirection, setSelectedSuccessDirection] = useState<'outbound' | 'return'>('outbound');
 
   // ── Validation errors state ──────────────────────────────────────────────
   const [searchErrors, setSearchErrors] = useState<{
@@ -1224,6 +1290,54 @@ export default function App() {
       setReturnOffset(0);
     }
   }, [step]);
+
+  // Sync/Resize passenger details list based on selected passenger counts
+  useEffect(() => {
+    const totalPaxCount = passengers.adults + passengers.children + passengers.infants;
+    if (passengerDetails.length !== totalPaxCount) {
+      const details: PassengerInfo[] = [];
+      for (let i = 0; i < passengers.adults; i++) {
+        details.push({
+          title: 'Mr',
+          firstName: '',
+          lastName: '',
+          dateOfBirth: '',
+          nationality: 'Sudanese',
+          passportNumber: '',
+          passportExpiry: '',
+          gender: 'Male',
+          type: 'adult'
+        });
+      }
+      for (let i = 0; i < passengers.children; i++) {
+        details.push({
+          title: 'Mstr',
+          firstName: '',
+          lastName: '',
+          dateOfBirth: '',
+          nationality: 'Sudanese',
+          passportNumber: '',
+          passportExpiry: '',
+          gender: 'Male',
+          type: 'child'
+        });
+      }
+      for (let i = 0; i < passengers.infants; i++) {
+        details.push({
+          title: 'Mstr',
+          firstName: '',
+          lastName: '',
+          dateOfBirth: '',
+          nationality: 'Sudanese',
+          passportNumber: '',
+          passportExpiry: '',
+          gender: 'Male',
+          type: 'infant'
+        });
+      }
+      setPassengerDetails(details);
+    }
+  }, [passengers, passengerDetails.length]);
 
   // Exchange rate functions & helpers
   const convertUsd = (usd: number) => {
@@ -1479,6 +1593,53 @@ export default function App() {
     return Object.keys(errors).length === 0;
   };
 
+  const validatePassengers = () => {
+    const errors: Record<string, string> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!contactEmail) {
+      errors['contact_email'] = lang === 'en' ? 'Email is required' : 'البريد الإلكتروني مطلوب';
+    } else if (!emailRegex.test(contactEmail)) {
+      errors['contact_email'] = lang === 'en' ? 'Invalid email format' : 'صيغة البريد الإلكتروني غير صحيحة';
+    }
+    
+    if (!contactPhone) {
+      errors['contact_phone'] = lang === 'en' ? 'Phone is required' : 'رقم الهاتف مطلوب';
+    } else if (contactPhone.replace(/\D/g, '').length < 7) {
+      errors['contact_phone'] = lang === 'en' ? 'Invalid phone format' : 'رقم الهاتف غير صحيح';
+    }
+
+    passengerDetails.forEach((pax, idx) => {
+      if (!pax.firstName.trim()) {
+        errors[`pax_${idx}_firstName`] = lang === 'en' ? 'First name is required' : 'الاسم الأول مطلوب';
+      }
+      if (!pax.lastName.trim()) {
+        errors[`pax_${idx}_lastName`] = lang === 'en' ? 'Last name is required' : 'الاسم الأخير مطلوب';
+      }
+      if (!pax.dateOfBirth) {
+        errors[`pax_${idx}_dateOfBirth`] = lang === 'en' ? 'Date of birth is required' : 'تاريخ الميلاد مطلوب';
+      }
+      if (!pax.passportNumber.trim()) {
+        errors[`pax_${idx}_passportNumber`] = lang === 'en' ? 'Passport number is required' : 'رقم جواز السفر مطلوب';
+      }
+      if (!pax.passportExpiry) {
+        errors[`pax_${idx}_passportExpiry`] = lang === 'en' ? 'Expiry date is required' : 'تاريخ الانتهاء مطلوب';
+      }
+    });
+
+    setPassengerErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      const firstErrorKey = Object.keys(errors)[0];
+      const errorEl = document.getElementById(firstErrorKey);
+      if (errorEl) {
+        errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+    return true;
+  };
+
   const nextStep = () => {
     // Validate search form before proceeding
     if (step === 'search') {
@@ -1489,15 +1650,14 @@ export default function App() {
 
     let nextS: Step = 'results';
     if (step === 'search') nextS = 'results';
-    else if (step === 'results') nextS = 'services';
+    else if (step === 'results') nextS = 'passengers';
+    else if (step === 'passengers') {
+      if (!validatePassengers()) return;
+      nextS = 'services';
+    }
     else if (step === 'services') nextS = 'seats';
     else if (step === 'seats') {
-      if (!showUpgradeModal && selectedFare?.id !== 'business') {
-        setShowUpgradeModal(true);
-        return;
-      } else {
-        nextS = 'success';
-      }
+      nextS = 'success';
     }
 
     setNextStepId(nextS);
@@ -1524,9 +1684,33 @@ export default function App() {
     }));
   };
 
+  const getBookingTotal = () => {
+    const totalPax = passengers.adults + passengers.children + passengers.infants;
+    const baseFare = (selectedFare?.price || 0) * totalPax;
+    const servicesTotal = selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0);
+    const seatTotal = selectedSeat ? selectedSeat.price : 0;
+    return baseFare + servicesTotal + seatTotal;
+  };
+
+  const getPaxSeatLabel = (paxIdx: number) => {
+    if (!selectedSeat) return '-';
+    const match = selectedSeat.label.match(/^(\d+)([A-F])$/);
+    if (!match) return selectedSeat.label;
+    const row = parseInt(match[1], 10);
+    const colLetter = match[2];
+    const colLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const startColIdx = colLetters.indexOf(colLetter);
+    const newColIdx = (startColIdx + paxIdx) % 6;
+    const rowOffset = Math.floor((startColIdx + paxIdx) / 6);
+    const newRow = row + rowOffset;
+    const newColLetter = colLetters[newColIdx];
+    return `${newRow}${newColLetter}`;
+  };
+
   const steps = [
     { id: 'search', label: t.steps.search, icon: Search },
     { id: 'results', label: t.steps.results, icon: Ticket },
+    { id: 'passengers', label: t.steps.passengers, icon: Users },
     { id: 'services', label: t.steps.services, icon: Briefcase },
     { id: 'seats', label: t.steps.seats, icon: Armchair },
     { id: 'success', label: t.steps.success, icon: ShieldCheck },
@@ -1597,33 +1781,37 @@ export default function App() {
             >
               <button
                 onClick={() => setShowSearch(false)}
-                className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
+                className="absolute top-8 end-8 text-white/50 hover:text-white transition-colors"
               >
                 <X size={40} strokeWidth={1} />
               </button>
               <div className="w-full max-w-4xl space-y-12">
                 <div className="space-y-4 text-center">
-                  <h2 className="text-4xl md:text-6xl font-extralight text-white tracking-tight">Search Tarco Aviation</h2>
-                  <p className="text-white/40 text-lg">Find flights, destinations, and travel information.</p>
+                  <h2 className="text-4xl md:text-6xl font-extralight text-white tracking-tight">{t.search.overlayTitle}</h2>
+                  <p className="text-white/40 text-lg">{t.search.overlaySubtitle}</p>
                 </div>
                 <div className="relative group">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-tarco-red group-focus-within:scale-110 transition-transform" size={32} />
+                  <Search className="absolute start-6 top-1/2 -translate-y-1/2 text-tarco-red group-focus-within:scale-110 transition-transform" size={32} />
                   <input
                     autoFocus
                     type="text"
-                    placeholder="Where would you like to go?"
-                    className="w-full bg-white/5 border-b-2 border-white/10 py-8 pl-20 pr-8 text-3xl md:text-5xl font-light text-white outline-none focus:border-tarco-red transition-colors placeholder:text-white/20"
+                    placeholder={t.search.placeholder}
+                    className="w-full bg-white/5 border-b-2 border-white/10 py-8 ps-20 pe-8 text-3xl md:text-5xl font-light text-white outline-none focus:border-tarco-red transition-colors placeholder:text-white/20"
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-                  {['Popular Destinations', 'Flight Status', 'Travel Requirements'].map((cat) => (
-                    <div key={cat} className="space-y-4">
-                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-red">{cat}</h3>
+                  {[
+                    { key: 'destinations', label: t.search.categories.destinations },
+                    { key: 'status', label: t.search.categories.status },
+                    { key: 'requirements', label: t.search.categories.requirements }
+                  ].map((cat) => (
+                    <div key={cat.key} className="space-y-4">
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-red">{cat.label}</h3>
                       <div className="flex flex-col gap-2">
                         {[1, 2, 3].map(i => (
-                          <button key={i} className="text-left text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group">
-                            <ArrowRightLeft size={16} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                            {cat === 'Popular Destinations' ? ['Dubai (DXB)', 'Cairo (CAI)', 'Riyadh (RUH)'][i - 1] : cat + ' Option ' + i}
+                          <button key={i} className="text-start text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group">
+                            <ArrowRightLeft size={16} className={`opacity-0 group-hover:opacity-100 transition-all ${lang === 'ar' ? 'translate-x-2 group-hover:translate-x-0' : '-translate-x-2 group-hover:translate-x-0'}`} />
+                            {cat.key === 'destinations' ? (lang === 'en' ? ['Dubai (DXB)', 'Cairo (CAI)', 'Riyadh (RUH)'][i - 1] : ['دبي (DXB)', 'القاهرة (CAI)', 'الرياض (RUH)'][i - 1]) : cat.label + ' ' + i}
                           </button>
                         ))}
                       </div>
@@ -1753,7 +1941,7 @@ export default function App() {
                     <span className="text-[10px] font-black uppercase tracking-widest text-white">Logged In</span>
                     <button
                       onClick={() => logout()}
-                      className="text-[10px] font-bold text-tarco-red hover:underline decoration-2 underline-offset-4 text-left"
+                      className="text-[10px] font-bold text-tarco-red hover:underline decoration-2 underline-offset-4 text-start"
                     >
                       Logout
                     </button>
@@ -1819,7 +2007,7 @@ export default function App() {
                       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-tarco-red">{menu.label}</h3>
                       <div className="flex flex-col gap-6">
                         {menu.items.map((item) => (
-                          <button key={item.name} className="flex items-center gap-4 text-left group">
+                          <button key={item.name} className="flex items-center gap-4 text-start group">
                             <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-tarco-blue group-hover:bg-tarco-red group-hover:text-white transition-colors">
                               <item.icon size={20} />
                             </div>
@@ -1877,16 +2065,16 @@ export default function App() {
           {/* Progress Tracker (only on checkout steps) */}
           {step !== 'search' && (
             <div className="max-w-7xl mx-auto px-4 pt-28">
-              <div className="flex justify-center">
-                <div className="flex items-center gap-4 bg-white px-8 py-4 rounded-2xl shadow-sm border border-slate-100">
+              <div className="overflow-x-auto scrollbar-none w-full flex py-2">
+                <div className="flex items-center gap-1.5 md:gap-4 bg-white px-3 py-3 md:px-8 md:py-4 rounded-2xl shadow-sm border border-slate-100 flex-nowrap flex-shrink-0 mx-auto w-max">
                   {steps.map((s, i) => {
                     const isActive = s.id === step;
                     const isPast = steps.findIndex(x => x.id === step) > i;
                     return (
                       <React.Fragment key={s.id}>
-                        <div className="stagger-item flex items-center gap-3" style={{ animationDelay: `${i * 40}ms` }}>
+                        <div className="stagger-item flex items-center gap-1.5 md:gap-3 flex-shrink-0" style={{ animationDelay: `${i * 40}ms` }}>
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-[background-color,box-shadow,transform] duration-300 flex-shrink-0 ${
+                            className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-[background-color,box-shadow,transform] duration-300 flex-shrink-0 ${
                               isActive
                                 ? 'bg-tarco-red text-white shadow-lg shadow-red-200 scale-110'
                                 : isPast
@@ -1895,12 +2083,16 @@ export default function App() {
                             }`}
                             style={isActive ? { transitionTimingFunction: 'cubic-bezier(0.34,1.56,0.64,1)' } : {}}
                           >
-                            {isPast ? <Check size={14} /> : <s.icon size={14} />}
+                            {isPast ? (
+                              <Check className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" />
+                            ) : (
+                              <s.icon className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" />
+                            )}
                           </div>
                           <span className={`text-[10px] font-black uppercase tracking-widest hidden sm:inline-block transition-colors duration-200 ${isActive ? 'text-tarco-blue' : 'text-slate-400'}`}>{s.label}</span>
                         </div>
                         {i < steps.length - 1 && (
-                          <div className={`w-8 h-[2px] rounded-full overflow-hidden bg-slate-100 relative`}>
+                          <div className={`w-3 md:w-8 h-[2px] rounded-full overflow-hidden bg-slate-100 relative flex-shrink-0`}>
                             <div
                               className="absolute inset-0 bg-tarco-blue origin-left"
                               style={{
@@ -1928,37 +2120,41 @@ export default function App() {
                 className="relative"
               >
                 {/* Hero Section - Full Bleed */}
-                <div className="relative h-[60vh] md:h-[65vh] min-h-[450px] md:min-h-[520px] w-full overflow-hidden bg-slate-950">
+                <div className="relative h-[48vh] md:h-[65vh] min-h-[360px] md:min-h-[520px] w-full overflow-hidden bg-slate-950">
                   <div className="absolute inset-0 overflow-hidden">
                     {/* Fallback Background Image behind the Canvas */}
                     <div 
-                      className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
+                      className="absolute inset-0 bg-cover bg-[position:70%_center] md:bg-center bg-no-repeat opacity-65 md:opacity-50"
                       style={{ backgroundImage: `url(${assets['hero_bg'] || '/Images/hero_bg.png'})` }}
                     />
-                    <canvas ref={canvasRef} id="canvas3d" className="absolute inset-0 w-full h-full outline-none border-none z-10 opacity-70"></canvas>
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#041438]/80 via-[#041438]/40 to-[#041438]/90 pointer-events-none z-20" />
+                    <canvas 
+                      ref={canvasRef} 
+                      id="canvas3d" 
+                      className="hidden md:block absolute inset-0 w-full h-full outline-none border-none z-10 opacity-70 pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#041438]/85 via-[#041438]/50 to-[#041438]/95 pointer-events-none z-20" />
                   </div>
 
-                  <div className="absolute inset-0 flex flex-col justify-center pb-20 md:pb-28 px-6 md:px-12 lg:px-24 z-30 pointer-events-none">
+                  <div className="absolute inset-0 flex flex-col justify-center pb-16 md:pb-28 px-5 md:px-12 lg:px-24 z-30 pointer-events-none">
                     <motion.div
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5, duration: 1 }}
-                      className="max-w-3xl space-y-6"
+                      className="max-w-3xl space-y-4 md:space-y-6 text-start"
                     >
-                      <div className="space-y-4">
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
+                      <div className="space-y-3 md:space-y-4 text-start">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-white text-start">
                           {t.hero.title}<br />
                           <span className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-1">
                             {t.hero.suffix}
                             {t.hero.highlight && (
-                              <span className="bg-tarco-red text-white px-4 py-1 inline-flex items-center justify-center shadow-xl shadow-red-950/40 rounded-lg text-xl md:text-3xl font-black">
+                              <span className="bg-tarco-red text-white px-3 py-0.5 md:px-4 md:py-1 inline-flex items-center justify-center shadow-xl shadow-red-950/40 rounded-lg text-lg sm:text-xl md:text-3xl font-black">
                                 {t.hero.highlight}
                               </span>
                             )}
                           </span>
                         </h1>
-                        <p className="text-xs md:text-sm text-slate-200 font-normal tracking-wide max-w-lg opacity-95 leading-relaxed">
+                        <p className="text-[11px] sm:text-xs md:text-sm text-slate-200 font-normal tracking-wide max-w-lg opacity-95 leading-relaxed text-start">
                           {t.hero.subtitle}
                         </p>
                       </div>
@@ -1967,11 +2163,11 @@ export default function App() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 1.2 }}
-                        className="flex items-center gap-6 pointer-events-auto"
+                        className="flex items-center gap-6 pointer-events-auto justify-start"
                       >
                         <button
                           onClick={scrollToBooking}
-                          className="px-8 py-3 rounded-full border border-white/60 text-white font-black uppercase tracking-widest text-[10px] bg-white/5 hover:bg-white hover:text-[#041438] transition-all duration-300 shadow-lg backdrop-blur-sm"
+                          className="px-6 py-2.5 md:px-8 md:py-3 rounded-full border border-white/60 text-white font-black uppercase tracking-widest text-[9px] md:text-[10px] bg-white/5 hover:bg-white hover:text-[#041438] transition-all duration-300 shadow-lg backdrop-blur-sm"
                         >
                           {t.hero.cta}
                         </button>
@@ -1996,7 +2192,7 @@ export default function App() {
                 {/* Sticky Booking Card */}
                 <div 
                   ref={bookingRef} 
-                  className={`relative z-50 -mt-28 md:-mt-32 max-w-7xl mx-auto px-4 transition-all duration-500 ${isBookingFocused ? 'scale-[1.02]' : ''}`}
+                  className={`relative z-50 -mt-16 sm:-mt-24 md:-mt-32 max-w-7xl mx-auto px-4 transition-all duration-500 ${isBookingFocused ? 'scale-[1.02]' : ''}`}
                 >
                   <div 
                     className={`bg-white rounded-2xl border border-slate-100 overflow-visible transition-shadow duration-500 ${
@@ -2495,7 +2691,7 @@ export default function App() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="max-w-7xl mx-auto px-4 py-12"
+                className="max-w-7xl mx-auto px-4 py-12 pb-32 lg:pb-12"
               >
                 {step === 'results' && (() => {
                   const localT = {
@@ -2613,8 +2809,8 @@ export default function App() {
 
                             {isRoundTrip ? (
                               /* 2D 8x7 Pricing Matrix */
-                              <div className="w-full overflow-x-auto no-scrollbar rounded-2xl border border-slate-100">
-                                <table className="w-full border-collapse text-left min-w-[800px]">
+                              <div className="w-full overflow-x-auto thin-scrollbar rounded-2xl border border-slate-100">
+                                <table className="w-full border-collapse text-start min-w-[800px]">
                                   <thead>
                                     <tr>
                                       {/* Top-Left Cell with Departure Controls */}
@@ -2878,6 +3074,366 @@ export default function App() {
                   );
                 })()}
 
+                {step === 'passengers' && (
+                  <motion.div
+                    key="passengers"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-8 animate-fade"
+                  >
+                    {renderBookingHeader()}
+
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-black text-tarco-navy">{t.passengersDetails.title}</h2>
+                      <p className="text-slate-500">{t.passengersDetails.subtitle}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                      {/* Main content: Passenger info cards */}
+                      <div className="lg:col-span-9 space-y-8 min-w-0">
+                        <div className="space-y-6">
+                          {passengerDetails.map((pax, idx) => {
+                            const isLead = idx === 0;
+                            const genderOptions = [
+                              { value: 'Male', label: t.passengersDetails.male },
+                              { value: 'Female', label: t.passengersDetails.female }
+                            ];
+                            const titleOptions = pax.type === 'adult' 
+                              ? ['Mr', 'Mrs', 'Ms'] 
+                              : ['Mstr', 'Miss'];
+
+                            return (
+                              <div
+                                key={idx}
+                                className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md space-y-6 relative overflow-hidden"
+                              >
+                                {/* Card Header with Badge */}
+                                <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-tarco-blue/5 text-tarco-blue flex items-center justify-center font-bold">
+                                      {idx + 1}
+                                    </div>
+                                    <div>
+                                      <h3 className="font-bold text-tarco-navy">
+                                        {t.passengersDetails.passengerNum.replace('{num}', String(idx + 1))}
+                                        {isLead && ` - ${t.passengersDetails.leadPassenger}`}
+                                      </h3>
+                                      <span className="text-[10px] px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full font-bold uppercase tracking-wider">
+                                        {pax.type === 'adult' ? t.passengersDetails.adult : pax.type === 'child' ? t.passengersDetails.child : t.passengersDetails.infant}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Form fields grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                                  {/* Title Select */}
+                                  <div className="md:col-span-3 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.titleLabel}</label>
+                                    <select
+                                      value={pax.title}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].title = e.target.value;
+                                        setPassengerDetails(updated);
+                                      }}
+                                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium cursor-pointer"
+                                    >
+                                      {titleOptions.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  {/* First Name */}
+                                  <div className="md:col-span-4 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.firstName}</label>
+                                    <input
+                                      id={`pax_${idx}_firstName`}
+                                      type="text"
+                                      value={pax.firstName}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].firstName = e.target.value;
+                                        setPassengerDetails(updated);
+                                        if (passengerErrors[`pax_${idx}_firstName`]) {
+                                          const errorsCopy = { ...passengerErrors };
+                                          delete errorsCopy[`pax_${idx}_firstName`];
+                                          setPassengerErrors(errorsCopy);
+                                        }
+                                      }}
+                                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium ${
+                                        passengerErrors[`pax_${idx}_firstName`] ? 'border-red-500 bg-red-50/10' : 'border-slate-200'
+                                      }`}
+                                    />
+                                    {passengerErrors[`pax_${idx}_firstName`] && (
+                                      <span className="text-xs text-red-500 font-semibold">{passengerErrors[`pax_${idx}_firstName`]}</span>
+                                    )}
+                                  </div>
+
+                                  {/* Last Name */}
+                                  <div className="md:col-span-5 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.lastName}</label>
+                                    <input
+                                      id={`pax_${idx}_lastName`}
+                                      type="text"
+                                      value={pax.lastName}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].lastName = e.target.value;
+                                        setPassengerDetails(updated);
+                                        if (passengerErrors[`pax_${idx}_lastName`]) {
+                                          const errorsCopy = { ...passengerErrors };
+                                          delete errorsCopy[`pax_${idx}_lastName`];
+                                          setPassengerErrors(errorsCopy);
+                                        }
+                                      }}
+                                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium ${
+                                        passengerErrors[`pax_${idx}_lastName`] ? 'border-red-500 bg-red-50/10' : 'border-slate-200'
+                                      }`}
+                                    />
+                                    {passengerErrors[`pax_${idx}_lastName`] && (
+                                      <span className="text-xs text-red-500 font-semibold">{passengerErrors[`pax_${idx}_lastName`]}</span>
+                                    )}
+                                  </div>
+
+                                  {/* Gender Select */}
+                                  <div className="md:col-span-3 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.gender}</label>
+                                    <select
+                                      value={pax.gender}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].gender = e.target.value;
+                                        setPassengerDetails(updated);
+                                      }}
+                                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium cursor-pointer"
+                                    >
+                                      {genderOptions.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  {/* Date of Birth */}
+                                  <div className="md:col-span-4 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.dob}</label>
+                                    <input
+                                      id={`pax_${idx}_dateOfBirth`}
+                                      type="date"
+                                      value={pax.dateOfBirth}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].dateOfBirth = e.target.value;
+                                        setPassengerDetails(updated);
+                                        if (passengerErrors[`pax_${idx}_dateOfBirth`]) {
+                                          const errorsCopy = { ...passengerErrors };
+                                          delete errorsCopy[`pax_${idx}_dateOfBirth`];
+                                          setPassengerErrors(errorsCopy);
+                                        }
+                                      }}
+                                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium ${
+                                        passengerErrors[`pax_${idx}_dateOfBirth`] ? 'border-red-500 bg-red-50/10' : 'border-slate-200'
+                                      }`}
+                                    />
+                                    {passengerErrors[`pax_${idx}_dateOfBirth`] && (
+                                      <span className="text-xs text-red-500 font-semibold">{passengerErrors[`pax_${idx}_dateOfBirth`]}</span>
+                                    )}
+                                  </div>
+
+                                  {/* Nationality */}
+                                  <div className="md:col-span-5 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.nationality}</label>
+                                    <select
+                                      value={pax.nationality}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].nationality = e.target.value;
+                                        setPassengerDetails(updated);
+                                      }}
+                                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium cursor-pointer"
+                                    >
+                                      <option value="Sudanese">{lang === 'en' ? 'Sudanese' : 'سوداني'}</option>
+                                      <option value="Egyptian">{lang === 'en' ? 'Egyptian' : 'مصري'}</option>
+                                      <option value="Saudi">{lang === 'en' ? 'Saudi' : 'سعودي'}</option>
+                                      <option value="Emirati">{lang === 'en' ? 'Emirati' : 'إماراتي'}</option>
+                                      <option value="Qatari">{lang === 'en' ? 'Qatari' : 'قطري'}</option>
+                                      <option value="Turkish">{lang === 'en' ? 'Turkish' : 'تركي'}</option>
+                                      <option value="British">{lang === 'en' ? 'British' : 'بريطاني'}</option>
+                                      <option value="American">{lang === 'en' ? 'American' : 'أمريكي'}</option>
+                                    </select>
+                                  </div>
+
+                                  {/* Passport Number */}
+                                  <div className="md:col-span-6 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.passportNumber}</label>
+                                    <input
+                                      id={`pax_${idx}_passportNumber`}
+                                      type="text"
+                                      placeholder="e.g. P000000"
+                                      value={pax.passportNumber}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].passportNumber = e.target.value.toUpperCase();
+                                        setPassengerDetails(updated);
+                                        if (passengerErrors[`pax_${idx}_passportNumber`]) {
+                                          const errorsCopy = { ...passengerErrors };
+                                          delete errorsCopy[`pax_${idx}_passportNumber`];
+                                          setPassengerErrors(errorsCopy);
+                                        }
+                                      }}
+                                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium ${
+                                        passengerErrors[`pax_${idx}_passportNumber`] ? 'border-red-500 bg-red-50/10' : 'border-slate-200'
+                                      }`}
+                                    />
+                                    {passengerErrors[`pax_${idx}_passportNumber`] && (
+                                      <span className="text-xs text-red-500 font-semibold">{passengerErrors[`pax_${idx}_passportNumber`]}</span>
+                                    )}
+                                  </div>
+
+                                  {/* Passport Expiry Date */}
+                                  <div className="md:col-span-6 flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.passportExpiry}</label>
+                                    <input
+                                      id={`pax_${idx}_passportExpiry`}
+                                      type="date"
+                                      value={pax.passportExpiry}
+                                      onChange={(e) => {
+                                        const updated = [...passengerDetails];
+                                        updated[idx].passportExpiry = e.target.value;
+                                        setPassengerDetails(updated);
+                                        if (passengerErrors[`pax_${idx}_passportExpiry`]) {
+                                          const errorsCopy = { ...passengerErrors };
+                                          delete errorsCopy[`pax_${idx}_passportExpiry`];
+                                          setPassengerErrors(errorsCopy);
+                                        }
+                                      }}
+                                      className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium ${
+                                        passengerErrors[`pax_${idx}_passportExpiry`] ? 'border-red-500 bg-red-50/10' : 'border-slate-200'
+                                      }`}
+                                    />
+                                    {passengerErrors[`pax_${idx}_passportExpiry`] && (
+                                      <span className="text-xs text-red-500 font-semibold">{passengerErrors[`pax_${idx}_passportExpiry`]}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Contact Info Card */}
+                          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md space-y-6">
+                            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                              <div className="w-10 h-10 rounded-full bg-tarco-blue/5 text-tarco-blue flex items-center justify-center font-bold">
+                                <Mail size={20} />
+                              </div>
+                              <h3 className="font-bold text-tarco-navy">{t.passengersDetails.contactInfo}</h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Email */}
+                              <div className="flex flex-col gap-2">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.email}</label>
+                                <input
+                                  id="contact_email"
+                                  type="email"
+                                  placeholder="passenger@example.com"
+                                  value={contactEmail}
+                                  onChange={(e) => {
+                                    setContactEmail(e.target.value);
+                                    if (passengerErrors['contact_email']) {
+                                      const errorsCopy = { ...passengerErrors };
+                                      delete errorsCopy['contact_email'];
+                                      setPassengerErrors(errorsCopy);
+                                    }
+                                  }}
+                                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium ${
+                                    passengerErrors['contact_email'] ? 'border-red-500 bg-red-50/10' : 'border-slate-200'
+                                  }`}
+                                />
+                                {passengerErrors['contact_email'] && (
+                                  <span className="text-xs text-red-500 font-semibold">{passengerErrors['contact_email']}</span>
+                                )}
+                              </div>
+
+                              {/* Phone */}
+                              <div className="flex flex-col gap-2">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.passengersDetails.phone}</label>
+                                <input
+                                  id="contact_phone"
+                                  type="tel"
+                                  placeholder="e.g. +249 912345678"
+                                  value={contactPhone}
+                                  onChange={(e) => {
+                                    setContactPhone(e.target.value);
+                                    if (passengerErrors['contact_phone']) {
+                                      const errorsCopy = { ...passengerErrors };
+                                      delete errorsCopy['contact_phone'];
+                                      setPassengerErrors(errorsCopy);
+                                    }
+                                  }}
+                                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:outline-none focus:border-tarco-blue transition-colors font-medium ${
+                                    passengerErrors['contact_phone'] ? 'border-red-500 bg-red-50/10' : 'border-slate-200'
+                                  }`}
+                                />
+                                {passengerErrors['contact_phone'] && (
+                                  <span className="text-xs text-red-500 font-semibold">{passengerErrors['contact_phone']}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Back / Navigation CTA */}
+                        <div className="flex justify-between items-center pt-8 border-t border-slate-200">
+                          <button
+                            onClick={() => setStep('results')}
+                            className="text-slate-400 font-bold hover:text-tarco-navy transition-colors duration-150 flex items-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
+                          >
+                            {lang === 'en' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                            {t.passengersDetails.back}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Sidebar summary panel */}
+                      <div className="lg:col-span-3 space-y-6">
+                        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-6 sticky top-24">
+                          <h3 className="text-xl font-bold text-tarco-navy">{t.seats.summary}</h3>
+
+                          <div className="space-y-4">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-500">{t.seats.fare} ({selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business})</span>
+                              <span className="font-bold text-tarco-navy">{selectedFare ? formatPrice(selectedFare.price) : ''}</span>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
+                              <span className="font-bold text-tarco-navy">{t.seats.total}</span>
+                              <span className="text-3xl font-black text-tarco-navy">
+                                {formatPrice(getBookingTotal())}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-50">
+                            <ShieldCheck size={16} className="text-emerald-500" />
+                            {t.seats.secure}
+                          </div>
+
+                          <button
+                            onClick={nextStep}
+                            className="w-full py-4 bg-tarco-red hover:bg-red-600 text-white rounded-2xl font-bold shadow-lg shadow-red-900/10 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
+                          >
+                            {t.passengersDetails.continue}
+                            {lang === 'en' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {step === 'services' && (
                   <motion.div
                     key="services"
@@ -2888,13 +3444,14 @@ export default function App() {
                   >
                     {renderBookingHeader()}
 
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-black text-tarco-navy">{t.services.title}</h2>
+                      <p className="text-slate-500">{t.services.subtitle}</p>
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                       {/* Main content: Extra Services selection */}
                       <div className="lg:col-span-9 space-y-8 min-w-0">
-                        <div className="space-y-2">
-                          <h2 className="text-3xl font-black text-tarco-navy">{t.services.title}</h2>
-                          <p className="text-slate-500">{t.services.subtitle}</p>
-                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {EXTRA_SERVICES.map((service) => (
@@ -2927,11 +3484,11 @@ export default function App() {
                         {/* Navigation back button */}
                         <div className="flex justify-between items-center pt-8 border-t border-slate-200">
                           <button
-                            onClick={() => setStep('results')}
+                            onClick={() => setStep('passengers')}
                             className="text-slate-400 font-bold hover:text-tarco-navy transition-colors duration-150 flex items-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
                           >
                             {lang === 'en' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-                            {t.services.back}
+                            {lang === 'en' ? 'Back to Passengers' : 'العودة للمسافرين'}
                           </button>
                         </div>
                       </div>
@@ -2968,10 +3525,7 @@ export default function App() {
                             <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
                               <span className="font-bold text-tarco-navy">{t.seats.total}</span>
                               <span className="text-3xl font-black text-tarco-navy">
-                                {formatPrice(
-                                  (selectedFare?.price || 0) +
-                                  selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)
-                                )}
+                                {formatPrice(getBookingTotal())}
                               </span>
                             </div>
                           </div>
@@ -3004,54 +3558,59 @@ export default function App() {
                   >
                     {renderBookingHeader()}
 
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-black text-tarco-navy">{t.seats.title}</h2>
+                      <p className="text-slate-500">{t.seats.subtitle}</p>
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                       {/* Main content: Seat Selection */}
                       <div className="lg:col-span-9 space-y-8 min-w-0">
-                        <div className="space-y-2">
-                          <h2 className="text-3xl font-black text-tarco-navy">{t.seats.title}</h2>
-                          <p className="text-slate-500">{t.seats.subtitle}</p>
-                        </div>
 
                         {/* Seat Map */}
-                        <div className="bg-white rounded-[40px] p-12 shadow-xl border border-slate-100 relative overflow-hidden">
+                        <div className="bg-white rounded-3xl sm:rounded-[40px] p-4 sm:p-12 shadow-xl border border-slate-100 relative overflow-hidden">
                           {/* Airplane Shape Decoration */}
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-full bg-slate-50/50 rounded-t-[200px] border-x border-slate-100 pointer-events-none">
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[400px] h-full bg-slate-50/50 rounded-t-[200px] border-x border-slate-100 pointer-events-none">
                             {/* Cockpit Area */}
                             <div className="absolute top-0 left-0 right-0 h-48 bg-slate-100/50 rounded-t-[200px] border-b border-slate-200 flex flex-col items-center justify-center gap-2">
-                              <div className="flex gap-8">
-                                <div className="w-16 h-8 bg-slate-200 rounded-tl-full" />
-                                <div className="w-16 h-8 bg-slate-200 rounded-tr-full" />
+                              <div className="flex gap-4 sm:gap-8">
+                                <div className="w-12 sm:w-16 h-6 sm:h-8 bg-slate-200 rounded-tl-full" />
+                                <div className="w-12 sm:w-16 h-6 sm:h-8 bg-slate-200 rounded-tr-full" />
                               </div>
                               <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">{t.seats.deck}</span>
                             </div>
                           </div>
 
-                          <div className="relative z-10 space-y-4 max-w-md mx-auto pt-48">
+                          <div className="relative z-10 space-y-2 sm:space-y-4 max-w-sm sm:max-w-md mx-auto pt-48">
                             {/* Column Labels */}
-                            <div className="grid grid-cols-6 gap-3 mb-8 text-center text-[10px] font-black text-slate-300">
+                            <div className="grid grid-cols-7 gap-2 sm:gap-3 mb-8 text-center text-[10px] font-black text-slate-300">
                               <span>A</span><span>B</span><span>C</span><span className="opacity-0">|</span><span>D</span><span>E</span><span>F</span>
                             </div>
 
                             {SEATS.map((row, rowIndex) => (
-                              <div key={rowIndex} className="grid grid-cols-6 gap-3 items-center">
+                              <div key={rowIndex} className="grid grid-cols-7 gap-2 sm:gap-3 items-center">
                                 {row.map((seat, colIndex) => (
                                   <React.Fragment key={seat.id}>
-                                    {colIndex === 3 && <div className="w-4 h-full flex items-center justify-center text-[10px] font-bold text-slate-200">{rowIndex + 1}</div>}
+                                    {colIndex === 3 && (
+                                      <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-300">
+                                        {rowIndex + 1}
+                                      </div>
+                                    )}
                                     <motion.button
                                       whileHover={seat.type !== 'occupied' ? { scale: 1.1 } : {}}
                                       whileTap={seat.type !== 'occupied' ? { scale: 0.95 } : {}}
                                       disabled={seat.type === 'occupied'}
                                       onClick={() => setSelectedSeat(seat)}
                                       className={`relative aspect-square rounded-lg flex items-center justify-center transition-all ${seat.type === 'occupied'
-                                          ? 'bg-slate-200 cursor-not-allowed'
+                                          ? 'bg-slate-200 cursor-not-allowed text-slate-400'
                                           : selectedSeat?.id === seat.id
-                                            ? 'bg-red-500 text-white shadow-lg shadow-red-200'
+                                            ? 'bg-tarco-red text-white shadow-lg shadow-red-200'
                                             : seat.price > 0
-                                              ? 'bg-tarco-navy text-white'
-                                              : 'bg-blue-100 text-tarco-navy hover:bg-blue-200'
+                                              ? 'bg-tarco-navy text-white hover:bg-tarco-navy/90'
+                                              : 'bg-blue-50 text-tarco-blue hover:bg-blue-100'
                                         }`}
                                     >
-                                      <Armchair size={16} />
+                                      <Armchair className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                       {selectedSeat?.id === seat.id && seat.price > 0 && (
                                         <motion.div
                                           initial={{ opacity: 0, y: 10 }}
@@ -3121,11 +3680,7 @@ export default function App() {
                             <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
                               <span className="font-bold text-tarco-navy">{t.seats.total}</span>
                               <span className="text-3xl font-black text-tarco-navy">
-                                {formatPrice(
-                                  (selectedFare?.price || 0) +
-                                  (selectedSeat?.price || 0) +
-                                  selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)
-                                )}
+                                {formatPrice(getBookingTotal())}
                               </span>
                             </div>
                           </div>
@@ -3153,216 +3708,390 @@ export default function App() {
                   </motion.div>
                 )}
 
-                {step === 'success' && (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center justify-center py-12 space-y-12"
-                  >
-                    <div className="text-center space-y-4">
-                      <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Check size={40} />
-                      </div>
-                      <h2 className="text-4xl font-black text-tarco-navy">{t.success.title}</h2>
-                      <p className="text-slate-500">{t.success.subtitle.replace('{to}', to)}</p>
-                    </div>
+                {step === 'success' && (() => {
+                  const getPaxZone = (seatLabel: string) => {
+                    const isEn = lang === 'en';
+                    if (selectedFare?.id === 'business') return isEn ? '1 (Priority)' : '١ (أولوية)';
+                    const letter = seatLabel.slice(-1);
+                    if (['A', 'F'].includes(letter)) return isEn ? '2 (Window)' : '٢ (نافذة)';
+                    if (['B', 'E'].includes(letter)) return isEn ? '3 (Middle)' : '٣ (وسط)';
+                    return isEn ? '4 (Aisle)' : '٤ (ممر)';
+                  };
 
-                    {/* Digital Boarding Pass */}
+                  const Barcode = () => {
+                    const linePattern = [1, 2, 1, 4, 1, 2, 3, 1, 2, 1, 1, 2, 4, 1, 2, 1, 3, 2, 1, 4, 1, 2, 1, 1, 3, 2, 1, 4, 1, 2, 1, 1, 3, 2, 1, 4, 1, 2, 1];
+                    return (
+                      <div className="flex items-center justify-center h-12 w-full bg-white px-4">
+                        {linePattern.map((width, idx) => (
+                          <div
+                            key={idx}
+                            className="h-full bg-slate-800"
+                            style={{
+                              width: `${width}px`,
+                              marginRight: idx % 3 === 0 ? '2px' : '1px',
+                              opacity: idx % 7 === 0 ? 0.7 : 1
+                            }}
+                          />
+                        ))}
+                      </div>
+                    );
+                  };
+
+                  const isOutbound = selectedSuccessDirection === 'outbound';
+                  const boardingFromCode = isOutbound ? fromCity.code : toCity.code;
+                  const boardingFromName = isOutbound ? fromCity.name[lang] : toCity.name[lang];
+                  const boardingToCode = isOutbound ? toCity.code : fromCity.code;
+                  const boardingToName = isOutbound ? toCity.name[lang] : fromCity.name[lang];
+                  
+                  const boardingFlight = isOutbound ? 'TRC 402' : 'TRC 403';
+                  const boardingGate = isOutbound ? 'B12' : 'C08';
+                  const boardingTime = isOutbound ? '07:45' : '13:30';
+                  const departureTime = isOutbound ? '08:30' : '14:15';
+                  
+                  const activeFlightDate = isOutbound ? departureDate : returnDate;
+                  const boardingDateStr = activeFlightDate
+                    ? activeFlightDate.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: '2-digit' }).toUpperCase()
+                    : '14 APR 26';
+
+                  const pnrCode = "TRC" + (passengerDetails[0]?.lastName ? passengerDetails[0].lastName.substring(0, 3).toUpperCase() : "PAX");
+                  const activeSeatLabel = getPaxSeatLabel(selectedSuccessPaxIdx);
+                  const activePax = passengerDetails[selectedSuccessPaxIdx];
+                  const activePaxType = activePax?.type || 'adult';
+
+                  // Calculate dynamic baggage allowance
+                  const getBaggageAllowance = () => {
+                    const isEn = lang === 'en';
+                    const hasExtraBag = selectedServices.includes('baggage');
+                    if (selectedFare?.id === 'lite') {
+                      return hasExtraBag
+                        ? (isEn ? '23KG + 7KG Hand' : '٢٣ كجم + ٧ كجم يد')
+                        : (isEn ? '7KG Hand Only' : '٧ كجم يد فقط');
+                    } else if (selectedFare?.id === 'semi') {
+                      return hasExtraBag
+                        ? (isEn ? '2x 23KG + 7KG' : '٢ × ٢٣ كجم + ٧ كجم')
+                        : (isEn ? '23KG + 7KG Hand' : '٢٣ كجم + ٧ كجم يد');
+                    } else {
+                      // Business
+                      return hasExtraBag
+                        ? (isEn ? '3x 23KG + 7KG' : '٣ × ٢٣ كجم + ٧ كجم')
+                        : (isEn ? '2x 23KG + 7KG' : '٢ × ٢٣ كجم + ٧ كجم');
+                    }
+                  };
+
+                  const depDateStr = departureDate
+                    ? departureDate.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })
+                    : (lang === 'en' ? 'April 14, 2026' : '١٤ أبريل ٢٠٢٦');
+
+                  const subtitleText = t.success.subtitle
+                    .replace('{to}', to)
+                    .replace('April 14th', depDateStr)
+                    .replace('14 أبريل', depDateStr);
+
+                  return (
                     <motion.div
-                      initial={{ y: 40, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="w-full max-w-sm bg-white rounded-[32px] overflow-hidden shadow-2xl border border-slate-100"
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center py-12 space-y-8 success-print-container"
                     >
-                      <div className="bg-tarco-blue p-8 text-white space-y-6">
-                        <div className="flex justify-between items-center">
-                          <div className="flex flex-col leading-none">
-                            <div className="flex items-center gap-0.5">
-                              <span className="font-black tracking-tighter text-tarco-red">TARCO</span>
-                              <span className="font-black tracking-tighter text-white">AVIATION</span>
+                      <div className="text-center space-y-4">
+                        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 emerald-checkmark">
+                          <Check size={40} />
+                        </div>
+                        <h2 className="text-4xl font-black text-tarco-navy">{t.success.title}</h2>
+                        <p className="text-slate-500 max-w-md mx-auto">{subtitleText}</p>
+                      </div>
+
+                      {/* Passenger Selector for boarding pass */}
+                      {passengerDetails.length > 1 && (
+                        <div className="w-full max-w-sm overflow-x-auto no-scrollbar pb-2 no-print-pax-selector">
+                          <div className="flex gap-2 justify-start sm:justify-center min-w-max px-4">
+                            {passengerDetails.map((pax, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => setSelectedSuccessPaxIdx(idx)}
+                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${
+                                  selectedSuccessPaxIdx === idx
+                                    ? 'bg-tarco-red text-white shadow-md shadow-red-900/10'
+                                    : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                                }`}
+                              >
+                                {pax.firstName && pax.lastName ? `${pax.firstName.charAt(0)}. ${pax.lastName}` : `Pax ${idx + 1}`}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Outbound / Return Selector */}
+                      {isRoundTrip && (
+                        <div className="flex bg-slate-100 p-1 rounded-2xl w-full max-w-sm mb-4 no-print-trip-selector">
+                          <button
+                            onClick={() => setSelectedSuccessDirection('outbound')}
+                            className={`flex-grow py-2.5 rounded-xl text-xs font-black transition-all ${
+                              selectedSuccessDirection === 'outbound'
+                                ? 'bg-white text-tarco-navy shadow-sm'
+                                : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                          >
+                            {lang === 'en' ? 'Outbound Flight' : 'رحلة الذهاب'}
+                          </button>
+                          <button
+                            onClick={() => setSelectedSuccessDirection('return')}
+                            className={`flex-grow py-2.5 rounded-xl text-xs font-black transition-all ${
+                              selectedSuccessDirection === 'return'
+                                ? 'bg-white text-tarco-navy shadow-sm'
+                                : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                          >
+                            {lang === 'en' ? 'Return Flight' : 'رحلة العودة'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Digital Boarding Pass Wrapper (Concentric Double-Bezel) */}
+                      <div className="w-full max-w-sm p-3 rounded-[36px] bg-slate-100/90 border border-slate-200/50 shadow-[0_24px_48px_-15px_rgba(4,20,56,0.12)] backdrop-blur-md printable-ticket relative overflow-hidden transition-all duration-300">
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={`${selectedSuccessPaxIdx}-${selectedSuccessDirection}`}
+                            initial={{ y: 15, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -15, opacity: 0 }}
+                            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+                            className="w-full bg-white rounded-[26px] overflow-visible border border-slate-100/80 relative shadow-sm ticket-card"
+                          >
+                            {/* Upper ticket stub */}
+                            <div className="bg-gradient-to-br from-tarco-blue via-[#173a8f] to-tarco-navy p-8 text-white space-y-6 relative overflow-hidden rounded-t-[25px]">
+                              {/* Decorative background watermark plane */}
+                              <div className="absolute -right-8 -bottom-8 opacity-5 pointer-events-none select-none">
+                                <Plane className="w-40 h-40 transform -rotate-45" />
+                              </div>
+
+                              <div className="flex justify-between items-center relative z-10">
+                                <div className="flex items-center gap-2">
+                                  <img
+                                    src="/Images/TRC.svg"
+                                    alt=""
+                                    className="h-6 w-auto brightness-0 invert"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                  <div className="flex flex-col leading-none">
+                                    <div className="flex items-center gap-0.5">
+                                      <span className="font-black tracking-tighter text-tarco-red text-base">TARCO</span>
+                                      <span className="font-black tracking-tighter text-white text-base">AVIATION</span>
+                                    </div>
+                                    <span className="text-[6px] font-black text-tarco-red uppercase tracking-widest mt-0.5">The Legend of Africa</span>
+                                  </div>
+                                </div>
+                                <span className={`text-[9px] px-3 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 ${
+                                  selectedFare?.id === 'business'
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)] font-black'
+                                    : 'bg-white/10 text-white border border-white/10'
+                                }`}>
+                                  {selectedFare?.id === 'business' && '✦ '}
+                                  {selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business}
+                                </span>
+                              </div>
+
+                              <div className="flex justify-between items-center pt-2 relative z-10">
+                                <div className="space-y-0.5 text-start">
+                                  <h4 className="text-4xl font-black tracking-tight">{boardingFromCode}</h4>
+                                  <p className="text-[9px] font-bold opacity-60 uppercase tracking-wider">{boardingFromName}</p>
+                                </div>
+                                <div className="flex flex-col items-center flex-grow px-4">
+                                  <div className="w-full flex items-center justify-center gap-2 relative">
+                                    <div className="h-[1.5px] bg-white/20 flex-grow rounded-full"></div>
+                                    <Plane size={14} className={`text-tarco-red transform transition-transform duration-500 ${lang === 'en' ? 'rotate-90' : '-rotate-90'}`} />
+                                    <div className="h-[1.5px] bg-white/20 flex-grow rounded-full"></div>
+                                  </div>
+                                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest mt-1">Non-Stop</span>
+                                </div>
+                                <div className="text-end space-y-0.5">
+                                  <h4 className="text-4xl font-black tracking-tight">{boardingToCode}</h4>
+                                  <p className="text-[9px] font-bold opacity-60 uppercase tracking-wider">{boardingToName}</p>
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-[6px] font-bold text-tarco-red uppercase tracking-widest mt-0.5">The Legend of Africa</span>
-                          </div>
-                          <span className="text-xs font-bold opacity-60 uppercase tracking-widest">{t.success.boardingPass}</span>
-                        </div>
 
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="text-3xl font-black">KRT</h4>
-                            <p className="text-[10px] font-bold opacity-60 uppercase">Khartoum</p>
-                          </div>
-                          <div className="flex flex-col items-center gap-1">
-                            <div className="w-12 h-[1px] bg-white/20"></div>
-                            <Plane size={14} className="text-tarco-red" />
-                            <div className="w-12 h-[1px] bg-white/20"></div>
-                          </div>
-                          <div className="text-right">
-                            <h4 className="text-3xl font-black">DXB</h4>
-                            <p className="text-[10px] font-bold opacity-60 uppercase">Dubai</p>
-                          </div>
-                        </div>
+                            {/* Perforated teardrop separator */}
+                            <div className="relative h-6 bg-white select-none overflow-visible">
+                              {/* Left cutout */}
+                              <div className="cutout absolute -left-3 top-0 w-6 h-6 bg-slate-100/90 rounded-full border border-slate-200/40 shadow-[inset_-3px_0_5px_rgba(0,0,0,0.01)] z-10"></div>
+                              {/* Dashed line */}
+                              <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 border-t border-dashed border-slate-200"></div>
+                              {/* Right cutout */}
+                              <div className="cutout absolute -right-3 top-0 w-6 h-6 bg-slate-100/90 rounded-full border border-slate-200/40 shadow-[inset_3px_0_5px_rgba(0,0,0,0.01)] z-10"></div>
+                            </div>
+
+                            {/* Lower ticket stub */}
+                            <div className="px-8 pb-8 pt-2 space-y-8 text-start print:rounded-b-[25px]">
+                              <div className="grid grid-cols-3 gap-y-5 gap-x-2">
+                                {/* Row 1 */}
+                                <div className="col-span-2">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t.success.passenger}</p>
+                                  <p className="font-extrabold text-tarco-navy truncate">
+                                    {activePax
+                                      ? `${activePax.firstName} ${activePax.lastName}`
+                                      : 'Traveler Name'}
+                                  </p>
+                                </div>
+                                <div className="text-end">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t.success.flight}</p>
+                                  <p className="font-black text-tarco-navy">{boardingFlight}</p>
+                                </div>
+
+                                {/* Row 2 */}
+                                <div>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t.booking.date}</p>
+                                  <p className="font-bold text-tarco-navy text-xs sm:text-sm">{boardingDateStr}</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'en' ? 'Gate' : 'البوابة'}</p>
+                                  <p className="font-black text-tarco-navy">{boardingGate}</p>
+                                </div>
+                                <div className="text-end">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'en' ? 'Boarding' : 'الصعود'}</p>
+                                  <p className="font-black text-tarco-red">{boardingTime}</p>
+                                </div>
+
+                                {/* Row 3 */}
+                                <div>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t.seats.seat}</p>
+                                  <p className="font-black text-tarco-navy text-lg leading-none">{activeSeatLabel}</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'en' ? 'Class' : 'الدرجة'}</p>
+                                  <p className="font-bold text-tarco-navy text-xs truncate">
+                                    {selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business}
+                                  </p>
+                                </div>
+                                <div className="text-end">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'en' ? 'Zone' : 'المنطقة'}</p>
+                                  <p className="font-black text-tarco-navy">{getPaxZone(activeSeatLabel)}</p>
+                                </div>
+
+                                {/* Row 4 - NEW DETAILS */}
+                                <div>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'en' ? 'Type' : 'الفئة'}</p>
+                                  <p className="font-bold text-tarco-navy text-xs uppercase">
+                                    {activePaxType === 'adult' ? (lang === 'en' ? 'Adult' : 'بالغ') : activePaxType === 'child' ? (lang === 'en' ? 'Child' : 'طفل') : (lang === 'en' ? 'Infant' : 'رضيع')}
+                                  </p>
+                                </div>
+                                <div className="col-span-2 text-end">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'en' ? 'Baggage' : 'الأمتعة'}</p>
+                                  <p className="font-bold text-tarco-navy text-xs truncate">{getBaggageAllowance()}</p>
+                                </div>
+                              </div>
+
+                              <div className="border-t border-slate-100 pt-6 flex flex-col items-center gap-6">
+                                {/* QR Code Container */}
+                                <div className="relative group p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer overflow-hidden transition-all duration-300 hover:bg-slate-100/50">
+                                  <QrCode size={110} className="text-tarco-navy transition-transform duration-300 group-hover:scale-105" />
+                                  <div className="absolute left-0 right-0 h-[2px] bg-tarco-red/80 shadow-[0_0_8px_#E31E24] animate-laser pointer-events-none"></div>
+                                </div>
+
+                                <div className="w-full text-center space-y-1">
+                                  <p className="text-[9px] font-bold text-slate-400 tracking-wider">PNR / BOOKING REF</p>
+                                  <p className="font-black text-tarco-navy text-sm uppercase tracking-widest">{pnrCode}</p>
+                                </div>
+
+                                {/* Barcode representation */}
+                                <div className="w-full pt-2">
+                                  <Barcode />
+                                  <p className="text-[8px] font-mono tracking-[0.25em] text-slate-400 text-center mt-2 uppercase">
+                                    TRC-{pnrCode}-0{selectedSuccessPaxIdx + 1}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="bg-slate-50 p-6 flex flex-col gap-3 ticket-actions-container border-t border-slate-100 rounded-b-[25px]">
+                              <button className="w-full bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer hover:bg-black/90 active:scale-95 transition-all shadow-md shadow-black/10">
+                                <Wallet size={16} />
+                                {t.success.wallet}
+                              </button>
+                              <button
+                                onClick={() => window.print()}
+                                className="w-full bg-white border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-xs uppercase tracking-wider hover:bg-slate-100 hover:text-tarco-navy active:scale-95 transition-all cursor-pointer"
+                              >
+                                <Download size={16} />
+                                {lang === 'en' ? 'Download PDF / Print' : 'تحميل بصيغة PDF / طباعة'}
+                              </button>
+                            </div>
+                          </motion.div>
+                        </AnimatePresence>
                       </div>
 
-                      <div className="p-8 space-y-8 relative">
-                        {/* Perforated Line */}
-                        <div className="absolute top-0 left-0 right-0 flex justify-between px-4 -translate-y-1/2">
-                          <div className="w-6 h-6 bg-slate-50 rounded-full -ml-7"></div>
-                          <div className="border-t-2 border-dashed border-slate-100 flex-grow mt-3"></div>
-                          <div className="w-6 h-6 bg-slate-50 rounded-full -mr-7"></div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-y-6">
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.success.passenger}</p>
-                            <p className="font-bold text-tarco-navy">Y. Seddig</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.success.flight}</p>
-                            <p className="font-bold text-tarco-navy">TRC 402</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.booking.date}</p>
-                            <p className="font-bold text-tarco-navy">14 APR 26</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Gate' : 'البوابة'}</p>
-                            <p className="font-bold text-tarco-navy">B12</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">{t.seats.seat}</p>
-                            <p className="font-bold text-tarco-navy">{selectedSeat?.label}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">{lang === 'en' ? 'Class' : 'الدرجة'}</p>
-                            <p className="font-bold text-tarco-navy">{selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col items-center pt-4 space-y-4">
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <QrCode size={120} className="text-tarco-navy" />
-                          </div>
-                          <p className="text-[10px] font-bold text-slate-300 tracking-[0.3em]">TRC-99283-XJ-01</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-50 p-6 flex flex-col gap-3">
-                        <button className="w-full bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">
-                          <Wallet size={18} />
-                          {t.success.wallet}
-                        </button>
-                        <button className="w-full bg-white border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm hover:bg-slate-50 transition-colors">
-                          <Download size={18} />
-                          {lang === 'en' ? 'Download PDF' : 'تحميل بصيغة PDF'}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="text-tarco-navy font-bold hover:text-tarco-red transition-colors cursor-pointer text-sm book-another-btn"
+                      >
+                        {t.success.bookAnother}
+                      </button>
                     </motion.div>
+                  );
+                })()}
 
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="text-tarco-navy font-bold hover:underline"
-                    >
-                      {t.success.bookAnother}
-                    </button>
-                  </motion.div>
+                {/* Mobile Sticky Bottom Sheet */}
+                {['results', 'passengers', 'services', 'seats'].includes(step) && (
+                  <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/80 backdrop-blur-lg border-t border-slate-100 p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.seats.total}</span>
+                      <span className="text-xl font-black text-tarco-navy">{formatPrice(getBookingTotal())}</span>
+                    </div>
+                    {step === 'results' && (
+                      <button
+                        disabled={!selectedFare}
+                        onClick={nextStep}
+                        className={`px-8 py-3 rounded-xl font-bold transition-all text-sm ${
+                          selectedFare
+                            ? 'bg-tarco-red text-white hover:bg-red-600 active:scale-95 shadow-md shadow-red-900/10'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {t.results.continue}
+                      </button>
+                    )}
+                    {step === 'passengers' && (
+                      <button
+                        onClick={nextStep}
+                        className="px-8 py-3 bg-tarco-red hover:bg-red-600 text-white rounded-xl font-bold active:scale-95 transition-all shadow-md shadow-red-900/10 text-sm"
+                      >
+                        {t.passengersDetails.continue}
+                      </button>
+                    )}
+                    {step === 'services' && (
+                      <button
+                        onClick={nextStep}
+                        className="px-8 py-3 bg-tarco-red hover:bg-red-600 text-white rounded-xl font-bold active:scale-95 transition-all shadow-md shadow-red-900/10 text-sm"
+                      >
+                        {t.services.continue}
+                      </button>
+                    )}
+                    {step === 'seats' && (
+                      <button
+                        disabled={!selectedSeat}
+                        onClick={nextStep}
+                        className={`px-8 py-3 rounded-xl font-bold transition-all text-sm ${
+                          selectedSeat
+                            ? 'bg-tarco-red hover:bg-red-600 text-white active:scale-95 shadow-md shadow-red-900/10'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {t.seats.confirm}
+                      </button>
+                    )}
+                  </div>
                 )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Upgrade Modal */}
-        <AnimatePresence>
-          {showUpgradeModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowUpgradeModal(false)}
-                className="absolute inset-0 bg-tarco-navy/80 backdrop-blur-sm"
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative bg-white rounded-[32px] overflow-hidden max-w-2xl w-full shadow-2xl"
-              >
-                <button
-                  onClick={() => setShowUpgradeModal(false)}
-                  className="absolute top-6 right-6 z-20 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full backdrop-blur-md transition-all"
-                >
-                  <X size={20} />
-                </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                  <div className="h-64 md:h-auto relative">
-                    <img
-                      src={assets['upgrade_bg'] || "https://picsum.photos/seed/luxury-cabin/800/1200"}
-                      alt="Business Class"
-                      className="absolute inset-0 w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-tarco-navy/80 to-transparent md:bg-gradient-to-r"></div>
-                  </div>
-                  <div className="p-10 space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-tarco-red">
-                        <Star size={16} fill="currentColor" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{t.upgrade.subtitle}</span>
-                      </div>
-                      <h3 className="text-3xl font-black text-tarco-navy leading-tight">{t.upgrade.title}</h3>
-                    </div>
-
-                    <p className="text-slate-500 text-sm leading-relaxed">
-                      {lang === 'en'
-                        ? `Upgrade to Business Class for only ${formatPrice(150)} more and enjoy premium comfort, gourmet meals, and lounge access.`
-                        : `قم بالترقية إلى درجة الأعمال مقابل ${formatPrice(150)} إضافية فقط واستمتع براحة مميزة ووجبات فاخرة ودخول إلى الصالة.`}
-                    </p>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-tarco-navy">
-                          <Wifi size={14} />
-                        </div>
-                        Free High-Speed Wi-Fi
-                      </div>
-                      <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-tarco-navy">
-                          <Coffee size={14} />
-                        </div>
-                        Premium Dining Experience
-                      </div>
-                    </div>
-
-                    <div className="pt-4 flex flex-col gap-3">
-                      <button
-                        onClick={() => {
-                          setSelectedFare(FARES[2]);
-                          setShowUpgradeModal(false);
-                          setStep('success');
-                        }}
-                        className="w-full bg-tarco-red text-white py-4 rounded-2xl font-black shadow-lg hover:bg-red-600 transition-all active:scale-95"
-                      >
-                        {t.upgrade.button}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowUpgradeModal(false);
-                          setStep('success');
-                        }}
-                        className="w-full py-2 text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors"
-                      >
-                        {t.upgrade.no}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
 
         {/* Footer */}
         <footer className="mt-24 bg-tarco-blue py-24 px-6 text-white">
