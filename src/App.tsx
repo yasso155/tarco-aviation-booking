@@ -37,7 +37,10 @@ import {
   Mail,
   Phone,
   Plus,
-  Minus
+  Minus,
+  Ticket,
+  Briefcase,
+  Sofa
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, auth, signIn, logout } from './firebase';
@@ -155,7 +158,7 @@ const FARES: Fare[] = [
     ],
   },
   {
-    id: 'plus',
+    id: 'semi',
     name: 'Economy Plus',
     price: 249,
     features: [
@@ -180,10 +183,44 @@ const FARES: Fare[] = [
 ];
 
 const EXTRA_SERVICES: ExtraService[] = [
-  { id: 'baggage', name: 'Buy Extra Weight', price: 45, icon: Download, description: 'Pre-purchase additional baggage weight for your journey.' },
-  { id: 'meal', name: 'Premium Meal', price: 15, icon: Star, description: 'Select from our gourmet Pearl menu options.' },
-  { id: 'lounge', name: 'Tarco Pearl Lounge', price: 35, icon: ShieldCheck, description: 'Enjoy exclusive comfort at our Pearl Lounge before departure.' },
-  { id: 'wifi', name: 'In-flight Wi-Fi', price: 10, icon: Plane, description: 'Stay connected throughout your flight.' },
+  { id: 'baggage', name: 'Buy Extra Weight', price: 45, icon: Briefcase, description: 'Pre-purchase additional baggage weight for your journey.' },
+  { id: 'meal', name: 'Premium Meal', price: 15, icon: Coffee, description: 'Select from our gourmet Pearl menu options.' },
+  { id: 'lounge', name: 'Tarco Pearl Lounge', price: 35, icon: Sofa, description: 'Enjoy exclusive comfort at our Pearl Lounge before departure.' },
+  { id: 'wifi', name: 'In-flight Wi-Fi', price: 10, icon: Wifi, description: 'Stay connected throughout your flight.' },
+];
+
+interface Destination {
+  id: string;
+  code: string;
+  price: number;
+  image: string;
+  tagKey: 'booked' | 'value' | 'core' | 'active' | 'popular';
+  name: {
+    en: string;
+    ar: string;
+  };
+  country: {
+    en: string;
+    ar: string;
+  };
+}
+
+const DESTINATIONS: Destination[] = [
+  { id: 'khartoum', code: 'KRT', price: 250, image: '/Images/crew_photo.jpg', tagKey: 'core', name: { en: 'Khartoum', ar: 'الخرطوم' }, country: { en: 'Sudan', ar: 'السودان' } },
+  { id: 'portsudan', code: 'PZU', price: 220, image: '/Images/dest_portsudan.jpg', tagKey: 'active', name: { en: 'Port Sudan', ar: 'بورتسودان' }, country: { en: 'Sudan', ar: 'السودان' } },
+  { id: 'dubai', code: 'DXB', price: 380, image: '/Images/dest_dubai.jpg', tagKey: 'popular', name: { en: 'Dubai', ar: 'دبي' }, country: { en: 'UAE', ar: 'الإمارات' } },
+  { id: 'sharjah', code: 'SHJ', price: 360, image: '/Images/dest_dubai.jpg', tagKey: 'value', name: { en: 'Sharjah', ar: 'الشارقة' }, country: { en: 'UAE', ar: 'الإمارات' } },
+  { id: 'riyadh', code: 'RUH', price: 420, image: '/Images/dest_riyadh.jpg', tagKey: 'booked', name: { en: 'Riyadh', ar: 'الرياض' }, country: { en: 'Saudi Arabia', ar: 'السعودية' } },
+  { id: 'jeddah', code: 'JED', price: 340, image: '/Images/dest_riyadh.jpg', tagKey: 'popular', name: { en: 'Jeddah', ar: 'جدة' }, country: { en: 'Saudi Arabia', ar: 'السعودية' } },
+  { id: 'dammam', code: 'DMM', price: 390, image: '/Images/dest_riyadh.jpg', tagKey: 'value', name: { en: 'Dammam', ar: 'الدمام' }, country: { en: 'Saudi Arabia', ar: 'السعودية' } },
+  { id: 'cairo', code: 'CAI', price: 290, image: '/Images/dest_cairo.jpg', tagKey: 'value', name: { en: 'Cairo', ar: 'القاهرة' }, country: { en: 'Egypt', ar: 'مصر' } },
+  { id: 'doha', code: 'DOH', price: 410, image: '/Images/dest_doha.jpg', tagKey: 'popular', name: { en: 'Doha', ar: 'الدوحة' }, country: { en: 'Qatar', ar: 'قطر' } },
+  { id: 'asmara', code: 'ASM', price: 280, image: '/Images/dest_asmara.jpg', tagKey: 'value', name: { en: 'Asmara', ar: 'أسمرا' }, country: { en: 'Eritrea', ar: 'إريتريا' } },
+  { id: 'addis', code: 'ADD', price: 310, image: '/Images/dest_addis.jpg', tagKey: 'popular', name: { en: 'Addis Ababa', ar: 'أديس أبابا' }, country: { en: 'Ethiopia', ar: 'إثيوبيا' } },
+  { id: 'entebbe', code: 'EBB', price: 330, image: '/Images/dest_entebbe.jpg', tagKey: 'value', name: { en: 'Entebbe', ar: 'عنتيبي' }, country: { en: 'Uganda', ar: 'أوغندا' } },
+  { id: 'muscat', code: 'MCT', price: 400, image: '/Images/dest_muscat.jpg', tagKey: 'value', name: { en: 'Muscat', ar: 'مسقط' }, country: { en: 'Oman', ar: 'عمان' } },
+  { id: 'juba', code: 'JUB', price: 270, image: '/Images/crew_photo.jpg', tagKey: 'value', name: { en: 'Juba', ar: 'جوبا' }, country: { en: 'South Sudan', ar: 'جنوب السودان' } },
+  { id: 'kuwait', code: 'KWI', price: 430, image: '/Images/dest_doha.jpg', tagKey: 'value', name: { en: 'Kuwait City', ar: 'مدينة الكويت' }, country: { en: 'Kuwait', ar: 'الكويت' } },
 ];
 
 const TRANSLATIONS = {
@@ -504,7 +541,7 @@ const TRANSLATIONS = {
     },
     heroAlt: {
       title: 'حلق فوق',
-      gold: 'التوقعات',
+      accent: 'التوقعات',
       subtitle: 'استمتع بدفء الضيافة السودانية مع خدمة عالمية المستوى.'
     },
     booking: {
@@ -714,13 +751,39 @@ const FeatureItem: React.FC<{ feature: FareFeature; lang: Lang }> = ({ feature, 
   const t = TRANSLATIONS[lang];
   const featureData = t.features[feature.key as keyof typeof t.features];
 
+  const getFeatureIcon = (key: string) => {
+    switch (key) {
+      case 'handBag':
+        return <Briefcase size={16} className="text-tarco-blue flex-shrink-0" />;
+      case 'checkedBag':
+      case 'checkedBags':
+        return <Briefcase size={16} className="text-tarco-navy flex-shrink-0" />;
+      case 'meal':
+      case 'hotMeal':
+      case 'gourmet':
+        return <Coffee size={16} className="text-amber-600 flex-shrink-0" />;
+      case 'seat':
+      case 'extraLeg':
+      case 'lieFlat':
+        return <Armchair size={16} className="text-indigo-600 flex-shrink-0" />;
+      case 'lounge':
+        return <Sofa size={16} className="text-tarco-red flex-shrink-0" />;
+      case 'refundable':
+        return <ShieldCheck size={16} className="text-emerald-600 flex-shrink-0" />;
+      case 'priority':
+        return <Star size={16} className="text-tarco-red flex-shrink-0" />;
+      default:
+        return <Check size={16} className="text-emerald-500 flex-shrink-0" />;
+    }
+  };
+
   return (
     <li
       className="relative flex items-center gap-3 text-sm text-slate-600 cursor-help"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Check size={16} className="text-emerald-500 flex-shrink-0" />
+      {getFeatureIcon(feature.key)}
       <span>{featureData?.label || feature.key}</span>
 
       <AnimatePresence>
@@ -737,6 +800,96 @@ const FeatureItem: React.FC<{ feature: FareFeature; lang: Lang }> = ({ feature, 
         )}
       </AnimatePresence>
     </li>
+  );
+};
+
+interface FareCardProps {
+  fare: Fare;
+  dynamicPrice: number;
+  isSelected: boolean;
+  lang: Lang;
+  onClick: () => void;
+  t: any;
+  formatPrice: (price: number) => string;
+  delayIndex: number;
+}
+
+const FareCard: React.FC<FareCardProps> = ({
+  fare,
+  dynamicPrice,
+  isSelected,
+  lang,
+  onClick,
+  t,
+  formatPrice,
+  delayIndex
+}) => {
+  return (
+    <motion.div
+      key={fare.id}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: delayIndex * 0.06, ease: [0.23, 1, 0.32, 1] }}
+      onClick={onClick}
+      className={`fare-card relative cursor-pointer rounded-[2rem] overflow-hidden border-2 flex flex-col justify-between transition-all ${
+        isSelected
+          ? 'border-tarco-navy bg-white shadow-2xl scale-[1.02]'
+          : fare.recommended
+            ? 'border-tarco-red bg-white shadow-xl scale-[1.01]'
+            : 'border-slate-100 bg-white'
+      }`}
+    >
+      {fare.recommended && (
+        <div className="absolute top-2 right-4 bg-white/20 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full backdrop-blur-md">
+          {t.results.popular}
+        </div>
+      )}
+      
+      {/* Header block with distinct color for each fare class */}
+      <div className={`py-5 px-6 text-white text-center font-extrabold text-base tracking-wide flex flex-col justify-center items-center ${
+        fare.id === 'lite'
+          ? 'bg-tarco-blue'
+          : fare.id === 'semi'
+            ? 'bg-tarco-navy'
+            : 'bg-tarco-red'
+      }`}>
+        <span>
+          {fare.id === 'lite' ? t.fares.lite : fare.id === 'semi' ? t.fares.semi : t.fares.business}
+        </span>
+      </div>
+
+      {/* Card Body */}
+      <div className="p-6 flex-1 flex flex-col justify-between space-y-6">
+        <ul className="space-y-4">
+          {fare.features.map((feature, i) => (
+            <FeatureItem key={i} feature={feature} lang={lang} />
+          ))}
+        </ul>
+
+        <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-auto">
+          {/* Radio Selection Indicator */}
+          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+            isSelected ? 'border-tarco-blue bg-white' : 'border-slate-300 bg-white'
+          }`}>
+            {isSelected && (
+              <div className="w-3 h-3 rounded-full bg-tarco-blue" />
+            )}
+          </div>
+
+          {/* Price display */}
+          <div className="text-right">
+            <div className="text-2xl font-black text-tarco-navy">
+              {formatPrice(dynamicPrice)}
+            </div>
+            {fare.id === 'business' && (
+              <div className="text-[10px] text-tarco-red font-bold mt-0.5">
+                {lang === 'en' ? 'only 8 seat(s) remaining' : 'متبقي 8 مقاعد فقط'}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
@@ -773,7 +926,7 @@ function StatCard({ stat, lang }: { stat: { label: string; value: number; suffix
     : count.toString();
   return (
     <div ref={ref} className="flex flex-col items-center gap-1">
-      <stat.icon size={18} className="text-tarco-gold" />
+      <stat.icon size={18} className="text-tarco-red" />
       <span className="text-2xl font-black text-white tabular-nums">{display}{stat.suffix}</span>
       <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold">{stat.label}</span>
     </div>
@@ -784,6 +937,8 @@ function StatCard({ stat, lang }: { stat: { label: string; value: number; suffix
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bookingRef = useRef<HTMLDivElement>(null);
+  const fromInputRef = useRef<HTMLInputElement>(null);
+  const toInputRef = useRef<HTMLInputElement>(null);
   const [showScrollCTA, setShowScrollCTA] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
 
@@ -863,8 +1018,172 @@ export default function App() {
   const [isAppLoaded, setIsAppLoaded] = useState(false);
   const [nextStepId, setNextStepId] = useState<Step | null>(null);
   const [activeTab, setActiveTab] = useState<'booking' | 'manage' | 'checkin'>('booking');
-  const [from, setFrom] = useState('Khartoum (KRT)');
-  const [to, setTo] = useState('Dubai (DXB)');
+  const [fromCityId, setFromCityId] = useState('khartoum');
+  const [toCityId, setToCityId] = useState('dubai');
+  const [activeDropdown, setActiveDropdown] = useState<'from' | 'to' | null>(null);
+  const [fromSearch, setFromSearch] = useState('');
+  const [toSearch, setToSearch] = useState('');
+
+  const fromCity = DESTINATIONS.find(d => d.id === fromCityId) || DESTINATIONS[0];
+  const toCity = DESTINATIONS.find(d => d.id === toCityId) || DESTINATIONS[2];
+  const from = `${fromCity.name[lang]} (${fromCity.code})`;
+  const to = `${toCity.name[lang]} (${toCity.code})`;
+
+  const getFilteredDestinations = (searchQuery: string, excludeId?: string) => {
+    const query = searchQuery.trim().toLowerCase();
+    return DESTINATIONS.filter(dest => {
+      if (dest.id === excludeId) return false;
+      if (!query) return true;
+      return (
+        dest.name.en.toLowerCase().includes(query) ||
+        dest.name.ar.includes(query) ||
+        dest.code.toLowerCase().includes(query) ||
+        dest.country.en.toLowerCase().includes(query) ||
+        dest.country.ar.includes(query)
+      );
+    });
+  };
+
+  const getDestinationDates = (index: number) => {
+    const start = new Date();
+    start.setDate(start.getDate() + 7 + index * 3);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    
+    const opt: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+    
+    if (lang === 'en') {
+      return `${start.toLocaleDateString('en-US', opt)} - ${end.toLocaleDateString('en-US', opt)}`;
+    } else {
+      return `${start.toLocaleDateString('ar-EG', opt)} - ${end.toLocaleDateString('ar-EG', opt)}`;
+    }
+  };
+
+  const renderDestinationCard = (
+    destId: string,
+    heightClass: string,
+    datesIndex: number,
+    isFeatured: boolean = false,
+    isHalfWidth: boolean = false
+  ) => {
+    const dest = DESTINATIONS.find(d => d.id === destId);
+    if (!dest) return null;
+    const img = assets['dest_' + dest.id] || dest.image;
+    const name = dest.name[lang];
+    const price = dest.price;
+    const dates = getDestinationDates(datesIndex);
+    const isAr = lang === 'ar';
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+        onClick={() => {
+          setToCityId(dest.id);
+          bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
+        className={`dest-card relative ${heightClass} rounded-[2rem] overflow-hidden shadow-xl group cursor-pointer w-full`}
+      >
+        <SafeImage
+          src={img}
+          alt={name}
+          className="dest-card-img absolute inset-0 w-full h-full object-cover"
+          fallbackSrc={img}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent group-hover:from-black/90 group-hover:via-black/60 transition-[background] duration-300"></div>
+
+        {isFeatured ? (
+          /* Colombo/Featured style: Info and booking CTAs visible on face by default */
+          <div className="absolute inset-0 z-10 flex flex-col justify-between p-8">
+            <div className={`flex justify-between items-start ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={isAr ? 'text-right' : 'text-left'}>
+                <h3 className="text-3xl font-black text-white uppercase tracking-tight">{name}</h3>
+                <p className="text-white/60 text-xs font-semibold mt-1">{dates}</p>
+              </div>
+              <div className={isAr ? 'text-left' : 'text-right'}>
+                <p className="text-white/80 text-[10px] font-black uppercase tracking-widest leading-none">
+                  {lang === 'en' ? 'Economy' : 'درجة سياحية'}
+                </p>
+                <p className="text-tarco-red text-2xl font-black mt-1 leading-none">{formatPrice(price)}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center justify-center space-y-3 w-full max-w-[280px] mx-auto pb-4">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setToCityId(dest.id);
+                  bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+                className="w-full bg-tarco-red text-white py-3.5 rounded-full font-black uppercase tracking-widest text-xs shadow-lg shadow-red-900/30 transition-[background-color,transform] duration-150 hover:bg-red-700 active:scale-[0.97]"
+              >
+                {t.destinations.bookNow}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setToCityId(dest.id);
+                  bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+                className="inline-block text-white text-xs font-black uppercase tracking-widest border-b-2 border-white pb-0.5 transition-[color,border-color] duration-150 hover:text-tarco-red hover:border-tarco-red"
+              >
+                {lang === 'en' ? 'Discover' : 'اكتشف'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Normal style: Info on face, slide-up CTAs on hover */
+          <>
+            {/* Standard label state (hidden on hover) */}
+            <div className={`absolute bottom-6 left-8 right-8 z-10 flex justify-between items-end transition-[opacity,transform] duration-250 group-hover:opacity-0 group-hover:translate-y-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+              <div className={isAr ? 'text-right' : 'text-left'}>
+                <h3 className={`${isHalfWidth ? 'text-xl' : 'text-2xl'} font-black text-white uppercase tracking-tight`}>{name}</h3>
+                <p className="text-white/60 text-xs font-semibold mt-1">{dates}</p>
+              </div>
+              <div className={isAr ? 'text-left' : 'text-right'}>
+                <p className="text-white/80 text-[10px] font-black uppercase tracking-widest leading-none">
+                  {lang === 'en' ? 'Economy' : 'درجة سياحية'}
+                </p>
+                <p className="text-tarco-red text-2xl font-black mt-1 leading-none">{formatPrice(price)}</p>
+              </div>
+            </div>
+
+            {/* Hover reveal overlay */}
+            <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 translate-y-6 group-hover:translate-y-0 transition-[opacity,transform] duration-250 flex flex-col items-center justify-center p-8 text-center">
+              <div className={`space-y-4 w-full ${isHalfWidth ? 'max-w-[190px]' : 'max-w-[280px]'}`}>
+                <h3 className={`${isHalfWidth ? 'text-xl' : 'text-2xl'} font-black text-white uppercase tracking-tight mb-1 leading-tight`}>{name}</h3>
+                <p className="text-white/60 text-xs font-semibold leading-none">{dates}</p>
+                <p className="text-tarco-red text-xl font-black leading-none">{formatPrice(price)}</p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setToCityId(dest.id);
+                    bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                  className={`w-full bg-tarco-red text-white ${isHalfWidth ? 'py-2.5 text-[9px]' : 'py-3 text-[10px]'} rounded-full font-black uppercase tracking-widest shadow-lg shadow-red-900/30 transition-[background-color,transform] duration-150 hover:bg-red-700 active:scale-[0.97]`}
+                >
+                  {t.destinations.bookNow}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setToCityId(dest.id);
+                    bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                  className={`inline-block text-white ${isHalfWidth ? 'text-[9px]' : 'text-[10px]'} font-black uppercase tracking-widest border-b border-white pb-0.5 transition-[color,border-color] duration-150 hover:text-tarco-red hover:border-tarco-red`}
+                >
+                  {lang === 'en' ? 'Discover' : 'اكتشف'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </motion.div>
+    );
+  };
+
   const [isLiveSearchOpen, setIsLiveSearchOpen] = useState(false);
   const [isBookingFocused, setIsBookingFocused] = useState(false);
   const [isRoundTrip, setIsRoundTrip] = useState(true);
@@ -878,6 +1197,198 @@ export default function App() {
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // ── Validation errors state ──────────────────────────────────────────────
+  const [searchErrors, setSearchErrors] = useState<{
+    from?: string;
+    to?: string;
+    dates?: string;
+    same?: string;
+  }>({});
+  const [isSearchSubmitting, setIsSearchSubmitting] = useState(false);
+
+  // Flexible Date Pricing Matrix State Variables
+  const [selectedClass, setSelectedClass] = useState<'economy' | 'business'>('economy');
+  const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'SAR' | 'QAR'>('USD');
+  const [departureOffset, setDepartureOffset] = useState<number>(0);
+  const [returnOffset, setReturnOffset] = useState<number>(0);
+  const [gridBaseDeparture, setGridBaseDeparture] = useState<Date | null>(null);
+  const [gridBaseReturn, setGridBaseReturn] = useState<Date | null>(null);
+
+  // Sync grid base dates on entering results step
+  useEffect(() => {
+    if (step === 'results') {
+      setGridBaseDeparture(departureDate || new Date());
+      setGridBaseReturn(returnDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      setDepartureOffset(0);
+      setReturnOffset(0);
+    }
+  }, [step]);
+
+  // Exchange rate functions & helpers
+  const convertUsd = (usd: number) => {
+    switch (selectedCurrency) {
+      case 'SAR':
+        return Math.round(usd * 3.75);
+      case 'QAR':
+        return Math.round(usd * 3.64);
+      default:
+        return usd;
+    }
+  };
+
+  const formatPriceVal = (convertedPrice: number) => {
+    const isAr = lang === 'ar';
+    switch (selectedCurrency) {
+      case 'SAR':
+        return isAr ? `${convertedPrice} ر.س` : `${convertedPrice} SAR`;
+      case 'QAR':
+        return isAr ? `${convertedPrice} ر.ق` : `${convertedPrice} QAR`;
+      default:
+        return isAr ? `${convertedPrice} دولار` : `$${convertedPrice}`;
+    }
+  };
+
+  const formatPrice = (usd: number) => {
+    return formatPriceVal(convertUsd(usd));
+  };
+
+  const isPastDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d < today;
+  };
+
+  const getCellPrice = (dep: Date, ret: Date | null, cabin: 'economy' | 'business') => {
+    if (isPastDate(dep)) return null;
+    if (ret && isPastDate(ret)) return null;
+
+    const dest = DESTINATIONS.find(d => d.id === toCityId) || DESTINATIONS[2];
+    let base = dest.price;
+
+    if (!ret) {
+      // One-way pricing
+      base = Math.round(base * 0.6);
+      const depDay = dep.getDay();
+      if (depDay === 0 || depDay === 5 || depDay === 6) {
+        base += 45;
+      }
+      base += (dep.getDate() * 7) % 35;
+    } else {
+      // Round-trip pricing
+      const timeDiff = ret.getTime() - dep.getTime();
+      if (timeDiff < 0) return null; // Not available
+      const dayDiff = Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
+      if (dayDiff < 1) return null; // Too short
+
+      const depDay = dep.getDay();
+      const retDay = ret.getDay();
+      if (depDay === 0 || depDay === 5 || depDay === 6) base += 35;
+      if (retDay === 0 || retDay === 5 || retDay === 6) base += 35;
+
+      if (dayDiff < 3) base += 25;
+      if (dayDiff > 10) base += 15;
+
+      base += (dep.getDate() * 7 + ret.getDate() * 13) % 45;
+    }
+
+    if (cabin === 'business') {
+      base = base * 3;
+    }
+
+    return base;
+  };
+
+  const getGridDepartureDates = () => {
+    const base = gridBaseDeparture || departureDate || new Date();
+    const dates: Date[] = [];
+    for (let i = 0; i < 8; i++) {
+      const d = new Date(base);
+      d.setDate(base.getDate() - 2 + departureOffset + i);
+      dates.push(d);
+    }
+    return dates;
+  };
+
+  const getGridReturnDates = () => {
+    const base = gridBaseReturn || returnDate || new Date();
+    const dates: Date[] = [];
+    for (let j = 0; j < 7; j++) {
+      const d = new Date(base);
+      d.setDate(base.getDate() - 3 + returnOffset + j);
+      dates.push(d);
+    }
+    return dates;
+  };
+
+  const getFarePrice = (fareId: string, cellPrice: number) => {
+    if (selectedClass === 'economy') {
+      if (fareId === 'lite') return cellPrice;
+      if (fareId === 'semi') return Math.round(cellPrice * 1.3);
+      return Math.round(cellPrice * 2.5);
+    } else {
+      if (fareId === 'lite') return Math.round(cellPrice * 0.4);
+      if (fareId === 'semi') return Math.round(cellPrice * 0.5);
+      return cellPrice;
+    }
+  };
+
+  const getCheapestCell = (depDates: Date[], retDates: Date[]) => {
+    let minPrice = Infinity;
+    let cheapestDep: Date | null = null;
+    let cheapestRet: Date | null = null;
+
+    depDates.forEach(dep => {
+      retDates.forEach(ret => {
+        const price = getCellPrice(dep, ret, selectedClass);
+        if (price !== null && price < minPrice) {
+          minPrice = price;
+          cheapestDep = dep;
+          cheapestRet = ret;
+        }
+      });
+    });
+
+    return { minPrice, cheapestDep, cheapestRet };
+  };
+
+  const getCheapestCellOneWay = (depDates: Date[]) => {
+    let minPrice = Infinity;
+    let cheapestDep: Date | null = null;
+
+    depDates.forEach(dep => {
+      const price = getCellPrice(dep, null, selectedClass);
+      if (price !== null && price < minPrice) {
+        minPrice = price;
+        cheapestDep = dep;
+      }
+    });
+
+    return { minPrice, cheapestDep };
+  };
+
+  const handleCellClick = (dep: Date, ret: Date | null) => {
+    setDepartureDate(dep);
+    if (ret) {
+      setReturnDate(ret);
+    }
+  };
+
+  // Sync selected fare's price when date/class/currency changes
+  useEffect(() => {
+    if (selectedFare && departureDate) {
+      const cellPrice = getCellPrice(departureDate, isRoundTrip ? returnDate : null, selectedClass);
+      if (cellPrice !== null) {
+        const newPrice = getFarePrice(selectedFare.id, cellPrice);
+        if (selectedFare.price !== newPrice) {
+          setSelectedFare(prev => prev ? { ...prev, price: newPrice } : null);
+        }
+      }
+    }
+  }, [departureDate, returnDate, selectedClass, selectedCurrency, isRoundTrip]);
+
   const [showSearch, setShowSearch] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -935,11 +1446,47 @@ export default function App() {
   }, [step]);
 
   const handleSwap = () => {
-    setFrom(to);
-    setTo(from);
+    const temp = fromCityId;
+    setFromCityId(toCityId);
+    setToCityId(temp);
+  };
+
+  const validateSearch = (): boolean => {
+    const errors: typeof searchErrors = {};
+    const isAr = lang === 'ar';
+
+    if (!fromCityId) {
+      errors.from = isAr ? 'يرجى اختيار مدينة المغادرة' : 'Please select a departure city';
+    }
+    if (!toCityId) {
+      errors.to = isAr ? 'يرجى اختيار وجهتك' : 'Please select a destination';
+    }
+    if (fromCityId && toCityId && fromCityId === toCityId) {
+      errors.same = isAr ? 'يجب أن تختلف مدينة المغادرة عن الوجهة' : 'Departure and destination must be different';
+    }
+    if (!departureDate) {
+      errors.dates = isAr ? 'يرجى اختيار تاريخ المغادرة' : 'Please select a departure date';
+    }
+    if (isRoundTrip && departureDate && returnDate) {
+      if (returnDate <= departureDate) {
+        errors.dates = isAr
+          ? 'يجب أن يكون تاريخ العودة بعد تاريخ المغادرة'
+          : 'Return date must be after the departure date';
+      }
+    }
+
+    setSearchErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const nextStep = () => {
+    // Validate search form before proceeding
+    if (step === 'search') {
+      if (!validateSearch()) return;
+      if (isSearchSubmitting) return; // prevent double-submit
+      setIsSearchSubmitting(true);
+    }
+
     let nextS: Step = 'results';
     if (step === 'search') nextS = 'results';
     else if (step === 'results') nextS = 'services';
@@ -960,7 +1507,8 @@ export default function App() {
       setIsLoading(false);
       setStep(nextS);
       setNextStepId(null);
-    }, 1500); // Premium transition duration to allow for animation reveal
+      setIsSearchSubmitting(false);
+    }, 1500);
   };
 
   const toggleService = (id: string) => {
@@ -977,16 +1525,45 @@ export default function App() {
   };
 
   const steps = [
-    { id: 'search', label: t.steps.search, icon: Plane },
-    { id: 'results', label: t.steps.results, icon: Star },
-    { id: 'services', label: t.steps.services, icon: Download },
+    { id: 'search', label: t.steps.search, icon: Search },
+    { id: 'results', label: t.steps.results, icon: Ticket },
+    { id: 'services', label: t.steps.services, icon: Briefcase },
     { id: 'seats', label: t.steps.seats, icon: Armchair },
-    { id: 'success', label: t.steps.success, icon: Check },
+    { id: 'success', label: t.steps.success, icon: ShieldCheck },
   ];
 
   const scrollToBooking = useCallback(() => {
     bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
+
+  const renderBookingHeader = () => {
+    const totalPax = passengers.adults + passengers.children + passengers.infants;
+    return (
+      <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md flex flex-col md:flex-row justify-between items-center gap-6 stagger-item">
+        <div className="flex flex-col gap-1 w-full md:w-auto">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-2xl font-black text-tarco-navy">{fromCity.code}</span>
+            <ArrowRightLeft size={18} className="text-tarco-red animate-pulse" />
+            <span className="text-2xl font-black text-tarco-navy">{toCity.code}</span>
+            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+              {isRoundTrip ? t.booking.roundTrip : t.booking.oneWay}
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 font-semibold mt-1">
+            {departureDate?.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { day: '2-digit', month: 'short', year: 'numeric' })}
+            {isRoundTrip && ` - ${returnDate?.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { day: '2-digit', month: 'short', year: 'numeric' })}`}
+            {` • ${totalPax} ${lang === 'en' ? 'Passenger(s)' : 'مسافر(ين)'}`}
+          </p>
+        </div>
+        <button
+          onClick={() => setStep('search')}
+          className="w-full md:w-auto px-6 py-3 border-2 border-slate-200 hover:border-tarco-red hover:text-tarco-red text-slate-500 rounded-2xl font-bold text-xs transition-all active:scale-95 cursor-pointer"
+        >
+          {lang === 'en' ? 'Modify search' : 'تعديل البحث'}
+        </button>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -1030,18 +1607,18 @@ export default function App() {
                   <p className="text-white/40 text-lg">Find flights, destinations, and travel information.</p>
                 </div>
                 <div className="relative group">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-tarco-gold group-focus-within:scale-110 transition-transform" size={32} />
+                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-tarco-red group-focus-within:scale-110 transition-transform" size={32} />
                   <input
                     autoFocus
                     type="text"
                     placeholder="Where would you like to go?"
-                    className="w-full bg-white/5 border-b-2 border-white/10 py-8 pl-20 pr-8 text-3xl md:text-5xl font-light text-white outline-none focus:border-tarco-gold transition-colors placeholder:text-white/20"
+                    className="w-full bg-white/5 border-b-2 border-white/10 py-8 pl-20 pr-8 text-3xl md:text-5xl font-light text-white outline-none focus:border-tarco-red transition-colors placeholder:text-white/20"
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
                   {['Popular Destinations', 'Flight Status', 'Travel Requirements'].map((cat) => (
                     <div key={cat} className="space-y-4">
-                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-gold">{cat}</h3>
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-tarco-red">{cat}</h3>
                       <div className="flex flex-col gap-2">
                         {[1, 2, 3].map(i => (
                           <button key={i} className="text-left text-white/60 hover:text-white transition-colors text-lg font-light flex items-center gap-2 group">
@@ -1061,14 +1638,14 @@ export default function App() {
         {/* Navigation Bar */}
         <motion.nav
           animate={{
-            backgroundColor: navScrolled ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0)',
-            backdropFilter: navScrolled ? 'blur(20px)' : 'blur(0px)',
+            backgroundColor: navScrolled ? 'rgba(4, 20, 56, 0.98)' : 'rgba(4, 20, 56, 0.35)',
+            backdropFilter: 'blur(20px)',
             paddingTop: navScrolled ? '0.75rem' : '1.25rem',
             paddingBottom: navScrolled ? '0.75rem' : '1.25rem',
-            borderBottomColor: navScrolled ? 'rgba(226,232,240,1)' : 'rgba(226,232,240,0)',
+            borderBottomColor: navScrolled ? 'rgba(227, 30, 36, 0.4)' : 'rgba(255, 255, 255, 0.08)',
           }}
           initial={false}
-          className="fixed top-0 left-0 right-0 z-[100] px-6 lg:px-12 flex justify-between items-center transition-all duration-500 border-b"
+          className="fixed top-0 left-0 right-0 z-[100] px-6 lg:px-12 flex justify-between items-center transition-all duration-500 border-b border-transparent"
         >
           {/* Logo Section */}
           <div className="flex items-center gap-16">
@@ -1076,7 +1653,7 @@ export default function App() {
               <SafeImage
                 src={assets['logo_main'] || "/Images/logo_main.png"}
                 alt="Tarco Aviation"
-                className={`h-10 w-32 md:h-12 md:w-40 transition-all duration-500 ${!navScrolled ? 'brightness-0 invert' : ''}`}
+                className="h-10 w-32 md:h-12 md:w-40 transition-all duration-500 brightness-0 invert"
                 fallbackSrc="/Images/logo_main.png"
               />
             </a>
@@ -1091,8 +1668,7 @@ export default function App() {
                   onMouseLeave={() => setActiveMenu(null)}
                 >
                   <button
-                    className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-tarco-red ${navScrolled ? 'text-tarco-blue' : 'text-white'
-                      }`}
+                    className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-tarco-red text-white"
                   >
                     {menu.label}
                     <ChevronDown size={14} className={`transition-transform duration-300 ${activeMenu === menu.id ? 'rotate-180 text-tarco-red' : ''}`} />
@@ -1150,8 +1726,7 @@ export default function App() {
             {/* Language Switcher */}
             <button
               onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105 ${navScrolled ? 'text-tarco-blue hover:bg-slate-100' : 'text-white hover:bg-white/10'
-                }`}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:scale-105 text-white hover:bg-white/10"
             >
               <Globe size={18} />
               <span className="text-[10px] font-black tracking-widest uppercase">
@@ -1162,8 +1737,7 @@ export default function App() {
             {/* Search Icon */}
             <button
               onClick={() => setShowSearch(true)}
-              className={`p-2 rounded-full transition-all hover:scale-110 ${navScrolled ? 'text-tarco-blue hover:bg-slate-100' : 'text-white hover:bg-white/10'
-                }`}
+              className="p-2 rounded-full transition-all hover:scale-110 text-white hover:bg-white/10"
             >
               <Search size={22} />
             </button>
@@ -1171,12 +1745,12 @@ export default function App() {
             {/* Auth / Profile */}
             <div className="hidden md:flex items-center gap-4">
               {user ? (
-                <div className="flex items-center gap-4 border-l pl-8 border-slate-200">
-                  <div className="w-10 h-10 rounded-full bg-tarco-gold/20 flex items-center justify-center text-tarco-gold border-2 border-tarco-gold/20">
+                <div className="flex items-center gap-4 border-l pl-8 border-slate-700">
+                  <div className="w-10 h-10 rounded-full bg-tarco-blue/10 flex items-center justify-center text-tarco-blue border-2 border-tarco-blue/20">
                     <User size={20} />
                   </div>
                   <div className="flex flex-col">
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${navScrolled ? 'text-tarco-blue' : 'text-white'}`}>Logged In</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white">Logged In</span>
                     <button
                       onClick={() => logout()}
                       className="text-[10px] font-bold text-tarco-red hover:underline decoration-2 underline-offset-4 text-left"
@@ -1190,10 +1764,7 @@ export default function App() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => signIn()}
-                  className={`flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl ${navScrolled
-                      ? 'bg-tarco-red text-white shadow-red-900/10'
-                      : 'bg-white text-tarco-blue shadow-black/10'
-                    }`}
+                  className="flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl bg-tarco-red text-white hover:bg-red-700 shadow-red-950/20"
                 >
                   <UserRound size={16} />
                   {t.nav.login}
@@ -1204,8 +1775,7 @@ export default function App() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(true)}
-              className={`lg:hidden p-2 rounded-xl border-2 ${navScrolled ? 'border-slate-100 text-tarco-blue' : 'border-white/20 text-white'
-                }`}
+              className="lg:hidden p-2 rounded-xl border-2 border-white/20 text-white hover:bg-white/10"
             >
               <Menu size={24} />
             </button>
@@ -1246,7 +1816,7 @@ export default function App() {
                       key={menu.id}
                       className="space-y-4"
                     >
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-tarco-gold">{menu.label}</h3>
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-tarco-red">{menu.label}</h3>
                       <div className="flex flex-col gap-6">
                         {menu.items.map((item) => (
                           <button key={item.name} className="flex items-center gap-4 text-left group">
@@ -1288,11 +1858,12 @@ export default function App() {
         <AnimatePresence>
           {showScrollCTA && step === 'search' && (
             <motion.button
-              initial={{ opacity: 0, y: 20, scale: 0.8 }}
+              initial={{ opacity: 0, y: 24, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.8 }}
+              exit={{ opacity: 0, y: 16, scale: 0.95 }}
+              transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
               onClick={scrollToBooking}
-              className="fixed bottom-8 right-8 z-[150] bg-tarco-red text-white px-6 py-4 rounded-2xl shadow-2xl shadow-red-200 flex items-center gap-3 font-black uppercase tracking-widest text-xs hover:bg-red-600 active:scale-95 transition-colors"
+              className="cta-float-btn fixed bottom-8 right-8 z-[150] bg-tarco-red text-white px-6 py-4 rounded-2xl shadow-2xl shadow-red-200 flex items-center gap-3 font-black uppercase tracking-widest text-xs"
             >
               <Zap size={16} fill="currentColor" />
               {t.hero.bookNow}
@@ -1305,7 +1876,7 @@ export default function App() {
         <div>
           {/* Progress Tracker (only on checkout steps) */}
           {step !== 'search' && (
-            <div className="max-w-7xl mx-auto px-4 pt-8">
+            <div className="max-w-7xl mx-auto px-4 pt-28">
               <div className="flex justify-center">
                 <div className="flex items-center gap-4 bg-white px-8 py-4 rounded-2xl shadow-sm border border-slate-100">
                   {steps.map((s, i) => {
@@ -1313,13 +1884,32 @@ export default function App() {
                     const isPast = steps.findIndex(x => x.id === step) > i;
                     return (
                       <React.Fragment key={s.id}>
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${isActive ? 'bg-tarco-red text-white shadow-lg shadow-red-200 scale-110' : isPast ? 'bg-tarco-blue text-white' : 'bg-slate-100 text-slate-400'}`}>
+                        <div className="stagger-item flex items-center gap-3" style={{ animationDelay: `${i * 40}ms` }}>
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-[background-color,box-shadow,transform] duration-300 flex-shrink-0 ${
+                              isActive
+                                ? 'bg-tarco-red text-white shadow-lg shadow-red-200 scale-110'
+                                : isPast
+                                ? 'bg-tarco-blue text-white'
+                                : 'bg-slate-100 text-slate-400'
+                            }`}
+                            style={isActive ? { transitionTimingFunction: 'cubic-bezier(0.34,1.56,0.64,1)' } : {}}
+                          >
                             {isPast ? <Check size={14} /> : <s.icon size={14} />}
                           </div>
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-tarco-blue' : 'text-slate-400'}`}>{s.label}</span>
+                          <span className={`text-[10px] font-black uppercase tracking-widest hidden sm:inline-block transition-colors duration-200 ${isActive ? 'text-tarco-blue' : 'text-slate-400'}`}>{s.label}</span>
                         </div>
-                        {i < steps.length - 1 && <div className={`w-8 h-[2px] rounded-full transition-colors duration-500 ${isPast ? 'bg-tarco-blue' : 'bg-slate-100'}`} />}
+                        {i < steps.length - 1 && (
+                          <div className={`w-8 h-[2px] rounded-full overflow-hidden bg-slate-100 relative`}>
+                            <div
+                              className="absolute inset-0 bg-tarco-blue origin-left"
+                              style={{
+                                transform: isPast ? 'scaleX(1)' : 'scaleX(0)',
+                                transition: 'transform 450ms cubic-bezier(0.23,1,0.32,1)'
+                              }}
+                            />
+                          </div>
+                        )}
                       </React.Fragment>
                     );
                   })}
@@ -1338,32 +1928,37 @@ export default function App() {
                 className="relative"
               >
                 {/* Hero Section - Full Bleed */}
-                <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-slate-900 overflow-hidden">
-                    <canvas ref={canvasRef} id="canvas3d" className="w-full h-full outline-none border-none"></canvas>
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/40 pointer-events-none z-10" />
+                <div className="relative h-[60vh] md:h-[65vh] min-h-[450px] md:min-h-[520px] w-full overflow-hidden bg-slate-950">
+                  <div className="absolute inset-0 overflow-hidden">
+                    {/* Fallback Background Image behind the Canvas */}
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50"
+                      style={{ backgroundImage: `url(${assets['hero_bg'] || '/Images/hero_bg.png'})` }}
+                    />
+                    <canvas ref={canvasRef} id="canvas3d" className="absolute inset-0 w-full h-full outline-none border-none z-10 opacity-70"></canvas>
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#041438]/80 via-[#041438]/40 to-[#041438]/90 pointer-events-none z-20" />
                   </div>
 
-                  <div className="absolute inset-0 flex flex-col justify-center px-4 md:px-12 lg:px-24 z-20 pointer-events-none">
+                  <div className="absolute inset-0 flex flex-col justify-center pb-20 md:pb-28 px-6 md:px-12 lg:px-24 z-30 pointer-events-none">
                     <motion.div
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5, duration: 1 }}
-                      className="max-w-3xl space-y-8"
+                      className="max-w-3xl space-y-6"
                     >
-                      <div className="space-y-6">
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.2] text-tarco-blue">
+                      <div className="space-y-4">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
                           {t.hero.title}<br />
-                          <span className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-2">
+                          <span className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-1">
                             {t.hero.suffix}
                             {t.hero.highlight && (
-                              <span className="bg-tarco-red text-white px-6 py-2 inline-flex items-center justify-center shadow-2xl shadow-red-900/20 rounded-xs">
+                              <span className="bg-tarco-red text-white px-4 py-1 inline-flex items-center justify-center shadow-xl shadow-red-950/40 rounded-lg text-xl md:text-3xl font-black">
                                 {t.hero.highlight}
                               </span>
                             )}
                           </span>
                         </h1>
-                        <p className="text-lg md:text-xl text-slate-700 font-medium tracking-wide max-w-xl opacity-90">
+                        <p className="text-xs md:text-sm text-slate-200 font-normal tracking-wide max-w-lg opacity-95 leading-relaxed">
                           {t.hero.subtitle}
                         </p>
                       </div>
@@ -1376,7 +1971,7 @@ export default function App() {
                       >
                         <button
                           onClick={scrollToBooking}
-                          className="px-10 py-4 rounded-full border-2 border-white text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-slate-900 transition-all duration-300"
+                          className="px-8 py-3 rounded-full border border-white/60 text-white font-black uppercase tracking-widest text-[10px] bg-white/5 hover:bg-white hover:text-[#041438] transition-all duration-300 shadow-lg backdrop-blur-sm"
                         >
                           {t.hero.cta}
                         </button>
@@ -1401,7 +1996,7 @@ export default function App() {
                 {/* Sticky Booking Card */}
                 <div 
                   ref={bookingRef} 
-                  className={`relative z-50 -mt-24 max-w-7xl mx-auto px-4 transition-all duration-500 ${isBookingFocused ? 'scale-[1.02]' : ''}`}
+                  className={`relative z-50 -mt-28 md:-mt-32 max-w-7xl mx-auto px-4 transition-all duration-500 ${isBookingFocused ? 'scale-[1.02]' : ''}`}
                 >
                   <div 
                     className={`bg-white rounded-2xl border border-slate-100 overflow-visible transition-shadow duration-500 ${
@@ -1432,7 +2027,7 @@ export default function App() {
                       {activeTab === 'booking' && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
 
-                          {/* â”€â”€ Row 1: Trip-type radios â”€â”€ */}
+                          {/* —— Row 1: Trip-type radios —— */}
                           <div className="flex items-center gap-5 mb-5">
                             {[
                               { label: t.booking.roundTrip, value: 'round' },
@@ -1453,22 +2048,30 @@ export default function App() {
                             ))}
                           </div>
 
-                          {/* â”€â”€ Row 2: Unified seamless input bar â”€â”€ */}
-                          <div className="flex flex-col md:flex-row items-stretch rounded-2xl border border-slate-200 bg-slate-50 overflow-visible mb-4 shadow-sm">
+                          <div className="flex flex-col md:flex-row items-stretch rounded-[24px] border border-slate-200 bg-white overflow-visible mb-6 shadow-sm divide-y md:divide-y-0 ltr:md:divide-x rtl:md:divide-x-reverse divide-slate-200/60">
 
                             {/* From */}
-                            <div className="flex-1 relative group">
-                              <div className="flex items-center gap-3 px-4 py-3 h-full">
+                            <div className={`flex-1 relative group ${activeDropdown === 'from' ? 'z-50' : ''}`}>
+                              <div 
+                                onClick={() => fromInputRef.current?.focus()}
+                                className={`flex items-center gap-3 px-4 py-4 h-full relative cursor-text ${activeDropdown === 'from' ? 'z-40' : ''}`}
+                              >
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <MapPin size={16} strokeWidth={1.5} className="text-slate-400" />
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.booking.from}</span>
                                   </div>
                                   <input
-                                    value={from}
-                                    onChange={(e) => setFrom(e.target.value)}
-                                    className="bg-transparent font-semibold text-sm text-slate-800 w-full outline-none placeholder:text-slate-400 leading-tight"
-                                  />
+                                     ref={fromInputRef}
+                                     value={activeDropdown === 'from' ? fromSearch : from}
+                                     onFocus={() => {
+                                       setActiveDropdown('from');
+                                       setFromSearch('');
+                                     }}
+                                     onChange={(e) => setFromSearch(e.target.value)}
+                                     placeholder={from}
+                                     className="bg-transparent font-semibold text-sm text-slate-800 w-full outline-none placeholder:text-slate-400 leading-tight text-start animate-none"
+                                   />
                                 </div>
                               </div>
 
@@ -1486,34 +2089,144 @@ export default function App() {
                               {/* Mobile swap button */}
                               <button
                                 onClick={handleSwap}
-                                className="md:hidden w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-tarco-blue border-t border-b border-slate-200"
+                                className="md:hidden w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-tarco-blue bg-slate-50 border-t border-b border-slate-100"
                               >
                                 <ArrowRightLeft size={14} /> {lang === 'en' ? 'Swap' : 'تبديل'}
                               </button>
 
-                              <div className="hidden md:block absolute right-0 top-3 bottom-3 w-[1px] bg-slate-200" />
+                              <AnimatePresence>
+                                {activeDropdown === 'from' && (
+                                  <>
+                                    <div className="fixed inset-0 z-30" onClick={() => {
+                                      setActiveDropdown(null);
+                                      setFromSearch('');
+                                    }} />
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: 10 }}
+                                      className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 p-2 z-40 max-h-64 overflow-y-auto"
+                                    >
+                                      {getFilteredDestinations(fromSearch, toCityId).length === 0 ? (
+                                        <div className="px-4 py-3 text-sm text-slate-400 italic text-center">
+                                          {lang === 'en' ? 'No destinations found' : 'لم يتم العثور على وجهات'}
+                                        </div>
+                                      ) : (
+                                        getFilteredDestinations(fromSearch, toCityId).map((dest) => (
+                                          <button
+                                            key={dest.id}
+                                            onClick={() => {
+                                              setFromCityId(dest.id);
+                                              setActiveDropdown(null);
+                                              setFromSearch('');
+                                            }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-start"
+                                          >
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
+                                              <MapPin size={16} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="flex items-center justify-between gap-2">
+                                                <span className="font-bold text-sm text-slate-800 truncate">
+                                                  {dest.name[lang]}
+                                                </span>
+                                                <span className="text-xs font-black text-tarco-blue bg-blue-50 px-2 py-0.5 rounded-md flex-shrink-0">
+                                                  {dest.code}
+                                                </span>
+                                              </div>
+                                              <span className="text-[10px] text-slate-400 block truncate text-start">
+                                                {dest.country[lang]}
+                                              </span>
+                                            </div>
+                                          </button>
+                                        ))
+                                      )}
+                                    </motion.div>
+                                  </>
+                                )}
+                              </AnimatePresence>
                             </div>
 
                             {/* To */}
-                            <div className="flex-1 relative group">
-                              <div className="flex items-center gap-3 px-4 py-3 h-full">
+                            <div className={`flex-1 relative group ${activeDropdown === 'to' ? 'z-50' : ''}`}>
+                              <div 
+                                onClick={() => toInputRef.current?.focus()}
+                                className={`flex items-center gap-3 px-4 py-4 h-full relative cursor-text ${activeDropdown === 'to' ? 'z-40' : ''}`}
+                              >
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <MapPin size={16} strokeWidth={1.5} className="text-tarco-red" />
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.booking.to}</span>
                                   </div>
                                   <input
-                                    value={to}
-                                    onChange={(e) => setTo(e.target.value)}
-                                    className="bg-transparent font-semibold text-sm text-slate-800 w-full outline-none placeholder:text-slate-400 leading-tight"
-                                  />
+                                     ref={toInputRef}
+                                     value={activeDropdown === 'to' ? toSearch : to}
+                                     onFocus={() => {
+                                       setActiveDropdown('to');
+                                       setToSearch('');
+                                     }}
+                                     onChange={(e) => setToSearch(e.target.value)}
+                                     placeholder={to}
+                                     className="bg-transparent font-semibold text-sm text-slate-800 w-full outline-none placeholder:text-slate-400 leading-tight text-start animate-none"
+                                   />
                                 </div>
                               </div>
-                              <div className="hidden md:block absolute right-0 top-3 bottom-3 w-[1px] bg-slate-200" />
+
+                              <AnimatePresence>
+                                {activeDropdown === 'to' && (
+                                  <>
+                                    <div className="fixed inset-0 z-30" onClick={() => {
+                                      setActiveDropdown(null);
+                                      setToSearch('');
+                                    }} />
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: 10 }}
+                                      className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 p-2 z-40 max-h-64 overflow-y-auto"
+                                    >
+                                      {getFilteredDestinations(toSearch, fromCityId).length === 0 ? (
+                                        <div className="px-4 py-3 text-sm text-slate-400 italic text-center">
+                                          {lang === 'en' ? 'No destinations found' : 'لم يتم العثور على وجهات'}
+                                        </div>
+                                      ) : (
+                                        getFilteredDestinations(toSearch, fromCityId).map((dest) => (
+                                          <button
+                                            key={dest.id}
+                                            onClick={() => {
+                                              setToCityId(dest.id);
+                                              setActiveDropdown(null);
+                                              setToSearch('');
+                                            }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-start"
+                                          >
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
+                                              <MapPin size={16} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="flex items-center justify-between gap-2">
+                                                <span className="font-bold text-sm text-slate-800 truncate">
+                                                  {dest.name[lang]}
+                                                </span>
+                                                <span className="text-xs font-black text-tarco-blue bg-blue-50 px-2 py-0.5 rounded-md flex-shrink-0">
+                                                  {dest.code}
+                                                </span>
+                                              </div>
+                                              <span className="text-[10px] text-slate-400 block truncate text-start">
+                                                {dest.country[lang]}
+                                              </span>
+                                            </div>
+                                          </button>
+                                        ))
+                                      )}
+                                    </motion.div>
+                                  </>
+                                )}
+                              </AnimatePresence>
                             </div>
 
-                            {/* Date Picker trigger (seamless) â€” calendar renders below as inline block */}
-                            <div className={`flex-[1.3] relative group ${showCalendar ? 'bg-blue-50/40 rounded-lg' : ''}`}>
+                            {/* Date Picker trigger (seamless) */}
+                            <div className={`flex-[1.3] relative group ${showCalendar ? 'bg-[#041438]/5' : ''}`}>
                               <HeroDatePicker
                                 departureDate={departureDate}
                                 returnDate={returnDate}
@@ -1523,7 +2236,6 @@ export default function App() {
                                 onToggle={() => setShowCalendar(!showCalendar)}
                                 t={t}
                               />
-                              <div className="hidden md:block absolute right-0 top-3 bottom-3 w-[1px] bg-slate-200" />
                             </div>
 
                             {/* Passengers */}
@@ -1598,7 +2310,7 @@ export default function App() {
                             </div>
                           </div>
 
-                          {/* â”€â”€ Inline Calendar (expands booking card) â”€â”€ */}
+                          {/* —— Inline Calendar (expands booking card) —— */}
                           {showCalendar && (
                              <InlineCalendar
                                departureDate={departureDate}
@@ -1618,7 +2330,7 @@ export default function App() {
                           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                             {/* Promo code â€“ subtle text link style */}
                             <div className="flex items-center gap-2 group">
-                              <Star size={15} className="text-tarco-gold" />
+                              <Star size={15} className="text-tarco-red" />
                               <input
                                 placeholder={`+ ${t.booking.promo || 'Add promo code'}`}
                                 className="bg-transparent text-sm font-semibold text-tarco-blue placeholder:text-slate-400 outline-none w-44 border-b border-dashed border-slate-300 focus:border-tarco-blue pb-0.5 transition-colors"
@@ -1715,57 +2427,48 @@ export default function App() {
 
 
 
-                  {/* Destination Exploration Carousel */}
-                  <div className="py-24 space-y-12 overflow-hidden">
+                  {/* Premium Featured Destinations Grid */}
+                  <div className="py-24 space-y-12">
                     <div className="text-center space-y-4">
                       <h2 className="text-4xl font-black text-tarco-blue uppercase tracking-tight">{t.destinations.title}</h2>
+                      <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
+                        {lang === 'en' 
+                          ? 'Discover our most popular destinations and find the best deals for your next adventure.' 
+                          : 'استكشف وجهاتنا الأكثر شعبية واعثر على أفضل العروض لمغامرتك القادمة.'}
+                      </p>
                       <div className="w-24 h-1 bg-tarco-red mx-auto"></div>
                     </div>
 
-                    <div className="flex gap-6 overflow-x-auto pb-12 px-4 no-scrollbar snap-x snap-mandatory">
-                      {[
-                        { id: 'riyadh', img: assets['dest_riyadh'] || '/Images/dest_riyadh.jpg', name: t.destinations.riyadh, price: 420, tag: t.destTags.booked },
-                        { id: 'cairo', img: assets['dest_cairo'] || '/Images/dest_cairo.jpg', name: t.destinations.cairo, price: 290, tag: t.destTags.value },
-                        { id: 'addis', img: assets['dest_addis'] || '/Images/dest_addis.webp', name: t.destinations.addis, price: 310, tag: t.destTags.popular },
-                        { id: 'asmara', img: assets['dest_asmara'] || '/Images/dest_asmara.jpg', name: t.destinations.asmara, price: 280, tag: t.destTags.value },
-                        { id: 'khartoum', img: assets['dest_khartoum'] || '/Images/dest_khartoum.jpg', name: lang === 'en' ? 'KHARTOUM' : 'الخرطوم', price: 250, tag: t.destTags.core },
-                        { id: 'portsudan', img: assets['dest_portsudan'] || '/Images/dest_portsudan.jpg', name: lang === 'en' ? 'PORT SUDAN' : 'بورتسودان', price: 220, tag: t.destTags.active },
-                        { id: 'jeddah', img: assets['dest_jeddah'] || '/Images/dest_jeddah.jpg', name: lang === 'en' ? 'JEDDAH' : 'جدة', price: 340, tag: t.destTags.popular },
-                      ].map((dest) => (
-                        <motion.div
-                          key={dest.id}
-                          whileHover={{ scale: 1.02 }}
-                          className="relative min-w-[85vw] md:min-w-[600px] h-[400px] rounded-[40px] overflow-hidden snap-center shadow-2xl group cursor-pointer"
-                        >
-                          <SafeImage
-                            src={dest.img}
-                            alt={dest.name}
-                            className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
-                            fallbackSrc={dest.img}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-
-                          {/* Tag badge */}
-                          <div className="absolute top-6 left-6 bg-tarco-gold/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
-                            {dest.tag}
-                          </div>
-
-                          {/* UI Overlay Card */}
-                          <div className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl flex justify-between items-center group-hover:bg-white/20 transition-all">
-                            <div>
-                              <h3 className="text-3xl font-black text-white uppercase">{dest.name}</h3>
-                              <p className="text-tarco-gold font-bold">{t.destinations.starting} <span className="text-2xl">${dest.price}</span></p>
-                            </div>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="bg-tarco-red text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-red-600 transition-colors shadow-lg shadow-red-900/40"
-                            >
-                              {t.destinations.bookNow}
-                            </motion.button>
-                          </div>
-                        </motion.div>
+                    {/* Mobile layout (standard vertical cards list) */}
+                    <div className="grid grid-cols-1 gap-6 md:hidden px-4">
+                      {['dubai', 'sharjah', 'jeddah', 'riyadh', 'portsudan', 'cairo', 'doha', 'addis'].map((destId, idx) => (
+                        <React.Fragment key={destId}>
+                          {renderDestinationCard(destId, 'h-[280px]', idx, false, false)}
+                        </React.Fragment>
                       ))}
+                    </div>
+
+                    {/* Desktop layout (asymmetrical masonry grid) */}
+                    <div className={`hidden md:flex gap-6 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                      {/* Left Column */}
+                      <div className="flex flex-col gap-6 w-1/2">
+                        {renderDestinationCard('dubai', 'h-[300px]', 0, true, false)}
+                        {renderDestinationCard('riyadh', 'h-[400px]', 1, false, false)}
+                        <div className="grid grid-cols-2 gap-6">
+                          {renderDestinationCard('cairo', 'h-[400px]', 2, false, true)}
+                          {renderDestinationCard('doha', 'h-[400px]', 3, false, true)}
+                        </div>
+                      </div>
+
+                      {/* Right Column */}
+                      <div className="flex flex-col gap-6 w-1/2">
+                        <div className="grid grid-cols-2 gap-6">
+                          {renderDestinationCard('sharjah', 'h-[400px]', 4, false, true)}
+                          {renderDestinationCard('jeddah', 'h-[400px]', 5, false, true)}
+                        </div>
+                        {renderDestinationCard('portsudan', 'h-[400px]', 6, false, false)}
+                        {renderDestinationCard('addis', 'h-[300px]', 7, false, false)}
+                      </div>
                     </div>
                   </div>
 
@@ -1779,157 +2482,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Service Excellence Section - Premium Redesign */}
-                  <div className="py-32 relative overflow-visible">
-                    <div className="max-w-7xl mx-auto px-4 relative">
-                      <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-0">
-                        
-                        {/* Image Side - Larger, Stylized */}
-                        <motion.div 
-                          initial={{ opacity: 0, x: 100 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
-                          className="w-full lg:w-2/3 relative z-10 group"
-                        >
-                          <div className="absolute -inset-4 bg-tarco-gold/20 rounded-[100px] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                          <motion.div 
-                            whileHover={{ scale: 1.02, rotate: -1 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                            className="relative aspect-[16/10] rounded-[80px] overflow-hidden shadow-[0_48px_100px_-20px_rgba(0,0,0,0.3)] ring-1 ring-white/20"
-                          >
-                            <SafeImage
-                              src={assets['crew_photo'] || "/Images/crew_photo.jpg"}
-                              alt="Cabin Crew"
-                              className="w-full h-full object-cover"
-                              fallbackSrc="/Images/crew_photo.jpg"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-tarco-blue/40 to-transparent"></div>
-                          </motion.div>
-                          
-                          {/* Decorative Floating Element */}
-                          <motion.div 
-                            animate={{ y: [0, -20, 0] }}
-                            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute -bottom-8 -right-8 w-48 h-48 bg-tarco-gold/10 rounded-full blur-2xl z-0"
-                          ></motion.div>
-                        </motion.div>
 
-                        {/* Content Card Side - Overlapping */}
-                        <motion.div 
-                          initial={{ opacity: 0, x: -100 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                          className="w-full lg:w-[500px] lg:-ml-24 relative z-20"
-                        >
-                          <div className="bg-white/95 backdrop-blur-xl p-10 lg:p-14 rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] border border-slate-100 space-y-10 group">
-                            
-                            <div className="space-y-4">
-                              <span className="text-tarco-red font-black uppercase tracking-[0.3em] text-xs px-4 py-2 bg-tarco-red/5 rounded-full inline-block">
-                                {t.excellence.subtitle}
-                              </span>
-                              <h2 className="text-5xl lg:text-7xl font-black text-tarco-blue leading-[0.95] tracking-tighter">
-                                Excellence <span className="block text-tarco-red italic font-medium tracking-normal text-5xl mt-2">in Service</span>
-                              </h2>
-                            </div>
 
-                            {/* Service Badges Grid */}
-                            <div className="grid grid-cols-1 gap-4">
-                              {[
-                                { text: t.excellence.point1, icon: ShieldCheck },
-                                { text: t.excellence.point2, icon: Users },
-                                { text: t.excellence.point3, icon: Plane }
-                              ].map((item, i) => (
-                                <motion.div 
-                                  key={i}
-                                  initial={{ opacity: 0, y: 20 }}
-                                  whileInView={{ opacity: 1, y: 0 }}
-                                  viewport={{ once: true }}
-                                  transition={{ delay: 0.4 + (i * 0.1) }}
-                                  className="flex items-center gap-4 group/item cursor-default"
-                                >
-                                  <div className="w-12 h-12 bg-tarco-gold/10 rounded-2xl flex items-center justify-center text-tarco-gold group-hover/item:bg-tarco-gold group-hover/item:text-white transition-all duration-300">
-                                    <item.icon size={22} strokeWidth={1.5} />
-                                  </div>
-                                  <span className="text-sm font-black uppercase tracking-widest text-slate-600 group-hover/item:text-tarco-blue transition-colors">
-                                    {item.text}
-                                  </span>
-                                </motion.div>
-                              ))}
-                            </div>
 
-                            <p className="text-slate-500 text-sm leading-relaxed font-medium italic opacity-80">
-                              "{t.excellence.desc}"
-                            </p>
-
-                            <motion.button 
-                              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px -10px rgba(29, 66, 150, 0.3)" }}
-                              whileTap={{ scale: 0.95 }}
-                              className="w-full bg-tarco-blue text-white py-6 rounded-[24px] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-blue-900/20 hover:bg-tarco-navy transition-all"
-                            >
-                              {t.journey.learn}
-                            </motion.button>
-                          </div>
-                        </motion.div>
-
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Popular Destinations Grid */}
-                  <div className="py-24 space-y-12">
-                    <div className="flex justify-between items-end">
-                      <div className="space-y-4">
-                        <h2 className="text-4xl font-black text-tarco-blue uppercase tracking-tight">{t.destinations.title}</h2>
-                        <div className="w-24 h-1 bg-tarco-red"></div>
-                      </div>
-                      <button className="text-tarco-red font-black uppercase tracking-widest text-xs hover:underline">
-                        {lang === 'en' ? 'View All Destinations' : 'عرض كل الوجهات'}
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {[
-                        { id: 'dubai', img: assets['dest_dubai'] || '/Images/dest_dubai.jpg', name: 'DUBAI', price: 380, flights: 8 },
-                        { id: 'doha', img: assets['dest_doha'] || '/Images/dest_doha.jpg', name: 'DOHA', price: 410, flights: 3 },
-                        { id: 'muscat', img: assets['dest_muscat'] || '/Images/dest_muscat.jpg', name: 'MUSCAT', price: 390, flights: 2 },
-                        { id: 'entebbe', img: assets['dest_entebbe'] || '/Images/dest_entebbe.jpg', name: 'ENTEBBE', price: 450, flights: 2 },
-                      ].map((dest) => (
-                        <motion.div
-                          key={dest.id}
-                          whileHover={{ scale: 1.02 }}
-                          className="relative h-[300px] rounded-[40px] overflow-hidden shadow-xl group cursor-pointer"
-                        >
-                          <SafeImage
-                            src={dest.img}
-                            alt={dest.name}
-                            className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
-                            fallbackSrc={dest.img}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all"></div>
-
-                          {/* Hover-reveal info */}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                            <h3 className="text-4xl font-black text-white tracking-[0.2em] group-hover:-translate-y-4 transition-all duration-300">{dest.name}</h3>
-                            <div className="opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex flex-col items-center gap-2">
-                              <p className="text-tarco-gold font-bold text-lg">From ${dest.price}</p>
-                              <div className="flex items-center gap-2 text-white/70 text-xs">
-                                <Clock size={12} />
-                                <span>{dest.flights} flights daily</span>
-                              </div>
-                              <motion.button
-                                whileTap={{ scale: 0.95 }}
-                                className="mt-1 bg-tarco-red text-white px-6 py-2 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg"
-                              >
-                                {t.destinations.bookNow}
-                              </motion.button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </motion.div>
             )}
@@ -1942,111 +2497,386 @@ export default function App() {
                 exit={{ opacity: 0 }}
                 className="max-w-7xl mx-auto px-4 py-12"
               >
-                {step === 'results' && (
-                  <motion.div
-                    key="results"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
-                  >
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <h2 className="text-3xl font-bold text-tarco-navy">{t.results.title}</h2>
-                        <p className="text-slate-500">Flight TRC-402 â€¢ {from} to {to}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-slate-400 uppercase">{t.results.departing}</span>
-                        <p className="font-bold">08:45 AM â€¢ 14 Apr</p>
-                      </div>
-                    </div>
+                {step === 'results' && (() => {
+                  const localT = {
+                    en: {
+                      modifySearch: 'Modify search',
+                      economy: 'Economy Class',
+                      business: 'Business / First Class',
+                      currency: 'Currency',
+                      travelClass: 'Travel Class',
+                      notAvailable: 'Not available',
+                      cheapest: 'Cheapest',
+                      depReturn: 'Return \\ Departure',
+                      departure: 'Departure',
+                      return: 'Return',
+                      oneWayTitle: 'Departure Dates (Flexible)',
+                      roundTripTitle: 'Flexible Date Pricing Matrix',
+                      selectMessage: 'Select a date combination to see fare options below'
+                    },
+                    ar: {
+                      modifySearch: 'تعديل البحث',
+                      economy: 'درجة الضيافة',
+                      business: 'درجة رجال الأعمال / الأولى',
+                      currency: 'العملة',
+                      travelClass: 'درجة السفر',
+                      notAvailable: 'غير متوفر',
+                      cheapest: 'الأرخص',
+                      depReturn: 'العودة \\ الذهاب',
+                      departure: 'الذهاب',
+                      return: 'العودة',
+                      oneWayTitle: 'تواريخ المغادرة (مرنة)',
+                      roundTripTitle: 'مصفوفة أسعار التواريخ المرنة',
+                      selectMessage: 'اختر تاريخ الذهاب والعودة لعرض تفاصيل الأسعار أدناه'
+                    }
+                  }[lang as 'en' | 'ar'] || {
+                    modifySearch: 'Modify search',
+                    economy: 'Economy Class',
+                    business: 'Business / First Class',
+                    currency: 'Currency',
+                    travelClass: 'Travel Class',
+                    notAvailable: 'Not available',
+                    cheapest: 'Cheapest',
+                    depReturn: 'Return \\ Departure',
+                    departure: 'Departure',
+                    return: 'Return',
+                    oneWayTitle: 'Departure Dates (Flexible)',
+                    roundTripTitle: 'Flexible Date Pricing Matrix',
+                    selectMessage: 'Select a date combination to see fare options below'
+                  };
 
-                    {/* Price Calendar Strip (Saudia Style) */}
-                    <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100 flex overflow-x-auto no-scrollbar">
-                      {[
-                        { date: '11 Apr', price: 280 },
-                        { date: '12 Apr', price: 265 },
-                        { date: '13 Apr', price: 250 },
-                        { date: '14 Apr', price: 240, active: true },
-                        { date: '15 Apr', price: 240 },
-                        { date: '16 Apr', price: 290 },
-                        { date: '17 Apr', price: 310 },
-                      ].map((d, i) => (
-                        <div
-                          key={i}
-                          className={`flex-1 min-w-[100px] py-4 px-2 rounded-xl text-center cursor-pointer transition-all ${d.active ? 'bg-tarco-blue text-white shadow-lg' : 'hover:bg-slate-50'}`}
-                        >
-                          <p className={`text-[10px] font-black uppercase tracking-widest ${d.active ? 'text-white/60' : 'text-slate-400'}`}>{d.date}</p>
-                          <p className="text-sm font-black mt-1">${d.price}</p>
+                  const depDates = getGridDepartureDates();
+                  const retDates = getGridReturnDates();
+                  
+                  // Compute cheapest cells
+                  const cheapest2D = getCheapestCell(depDates, retDates);
+                  const cheapest1D = getCheapestCellOneWay(depDates);
+
+                  // Current selected base price
+                  const selectedCellPrice = getCellPrice(
+                    departureDate || new Date(),
+                    isRoundTrip ? returnDate : null,
+                    selectedClass
+                  ) || 189;
+
+                  const totalPax = passengers.adults + passengers.children + passengers.infants;
+
+                  return (
+                    <motion.div
+                      key="results"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-8"
+                    >
+                      {renderBookingHeader()}
+
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        {/* Sidebar: Fare Cards only (Desktop) */}
+                        <div className="lg:col-span-3 space-y-6">
+                          {/* Desktop only: Vertical fare cards stacked in sidebar */}
+                          <div className="hidden lg:flex lg:flex-col lg:gap-6">
+                            {FARES.map((fare, idx) => {
+                              const dynamicPrice = getFarePrice(fare.id, selectedCellPrice);
+                              const isSelected = selectedFare?.id === fare.id;
+                              return (
+                                <FareCard
+                                  key={fare.id}
+                                  fare={fare}
+                                  dynamicPrice={dynamicPrice}
+                                  isSelected={isSelected}
+                                  lang={lang}
+                                  onClick={() => {
+                                    const targetClass = fare.id === 'business' ? 'business' : 'economy';
+                                    setSelectedClass(targetClass);
+                                    setSelectedFare({ ...fare, price: dynamicPrice });
+                                  }}
+                                  t={t}
+                                  formatPrice={formatPrice}
+                                  delayIndex={idx}
+                                />
+                              );
+                            })}
+                          </div>
                         </div>
-                      ))}
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {FARES.map((fare) => (
-                        <motion.div
-                          key={fare.id}
-                          whileHover={{ y: -5 }}
-                          onClick={() => setSelectedFare(fare)}
-                          className={`relative cursor-pointer rounded-3xl p-8 border-2 transition-all ${selectedFare?.id === fare.id
-                              ? 'border-tarco-navy bg-white shadow-2xl'
-                              : fare.recommended
-                                ? 'border-tarco-gold bg-white shadow-xl'
-                                : 'border-slate-100 bg-white hover:border-slate-200'
-                            } ${fare.recommended ? 'md:scale-105 z-10' : ''}`}
-                        >
-                          {fare.recommended && (
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-tarco-red text-white text-[10px] font-black uppercase tracking-tighter px-4 py-1 rounded-full shadow-md">
-                              {t.results.popular}
+                        {/* Main Grid Area */}
+                        <div className="lg:col-span-9 space-y-8 min-w-0">
+                          {/* Matrix / Calendar Strip */}
+                          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl space-y-4">
+                            <div className="space-y-1">
+                              <h3 className="text-lg font-bold text-tarco-navy">
+                                {isRoundTrip ? localT.roundTripTitle : localT.oneWayTitle}
+                              </h3>
+                              <p className="text-xs text-slate-400">{localT.selectMessage}</p>
                             </div>
-                          )}
-                          <div className="space-y-6">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="text-xl font-bold text-tarco-blue">
-                                  {fare.id === 'lite' ? t.fares.lite : fare.id === 'semi' ? t.fares.semi : t.fares.business}
-                                </h3>
-                                <div className="flex items-baseline gap-1 mt-2">
-                                  <span className="text-sm font-bold text-slate-400">$</span>
-                                  <span className="text-4xl font-black">{fare.price}</span>
+
+                            {isRoundTrip ? (
+                              /* 2D 8x7 Pricing Matrix */
+                              <div className="w-full overflow-x-auto no-scrollbar rounded-2xl border border-slate-100">
+                                <table className="w-full border-collapse text-left min-w-[800px]">
+                                  <thead>
+                                    <tr>
+                                      {/* Top-Left Cell with Departure Controls */}
+                                      <th className="bg-slate-50 border border-slate-100 p-4 min-w-[140px] text-center">
+                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                                          {localT.depReturn}
+                                        </div>
+                                        <div className="flex justify-center items-center gap-2 mt-2">
+                                          <button
+                                            onClick={() => setDepartureOffset(p => p - 1)}
+                                            className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded text-tarco-blue shadow-sm transition-all"
+                                            title="Shift Departure Left"
+                                          >
+                                            <ChevronLeft size={14} />
+                                          </button>
+                                          <span className="text-[8px] font-black text-slate-400">DEP</span>
+                                          <button
+                                            onClick={() => setDepartureOffset(p => p + 1)}
+                                            className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded text-tarco-blue shadow-sm transition-all"
+                                            title="Shift Departure Right"
+                                          >
+                                            <ChevronRight size={14} />
+                                          </button>
+                                        </div>
+                                      </th>
+                                      {/* Columns: Departure Dates */}
+                                      {depDates.map(d => {
+                                        const isSelectedDep = departureDate && d.toDateString() === departureDate.toDateString();
+                                        return (
+                                          <th
+                                            key={d.toISOString()}
+                                            className={`border border-slate-100 p-4 text-center min-w-[100px] transition-colors ${
+                                              isSelectedDep ? 'bg-tarco-blue/5 text-tarco-blue' : 'bg-slate-50/50 text-slate-600'
+                                            }`}
+                                          >
+                                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                              {d.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { weekday: 'short' })}
+                                            </div>
+                                            <div className="text-xs font-black mt-1">
+                                              {d.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'short' })}
+                                            </div>
+                                          </th>
+                                        );
+                                      })}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {/* Rows: Return Dates */}
+                                    {retDates.map(r => {
+                                      const isSelectedRet = returnDate && r.toDateString() === returnDate.toDateString();
+                                      const isFirstRow = r.toDateString() === retDates[0].toDateString();
+                                      const isLastRow = r.toDateString() === retDates[retDates.length - 1].toDateString();
+
+                                      return (
+                                        <tr key={r.toISOString()}>
+                                          {/* Row Header (Return Date) with vertical controls */}
+                                          <td
+                                            className={`border border-slate-100 p-4 font-semibold text-center transition-colors ${
+                                              isSelectedRet ? 'bg-tarco-blue/5 text-tarco-blue' : 'bg-slate-50/50 text-slate-600'
+                                            }`}
+                                          >
+                                            {isFirstRow && (
+                                              <button
+                                                onClick={() => setReturnOffset(p => p - 1)}
+                                                className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded text-tarco-blue shadow-sm transition-all mb-1 block mx-auto"
+                                                title="Shift Return Up"
+                                              >
+                                                <ChevronDown className="rotate-180" size={12} />
+                                              </button>
+                                            )}
+                                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                              {r.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { weekday: 'short' })}
+                                            </div>
+                                            <div className="text-xs font-black mt-1">
+                                              {r.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'short' })}
+                                            </div>
+                                            {isLastRow && (
+                                              <button
+                                                onClick={() => setReturnOffset(p => p + 1)}
+                                                className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded text-tarco-blue shadow-sm transition-all mt-1 block mx-auto"
+                                                title="Shift Return Down"
+                                              >
+                                                <ChevronDown size={12} />
+                                              </button>
+                                            )}
+                                          </td>
+
+                                          {/* Intersection Cells */}
+                                          {depDates.map(d => {
+                                            const price = getCellPrice(d, r, selectedClass);
+                                            const isSelectedCell = departureDate && returnDate && d.toDateString() === departureDate.toDateString() && r.toDateString() === returnDate.toDateString();
+                                            const isCheapest = cheapest2D.cheapestDep && cheapest2D.cheapestRet && d.toDateString() === cheapest2D.cheapestDep.toDateString() && r.toDateString() === cheapest2D.cheapestRet.toDateString();
+
+                                            if (price === null) {
+                                              const isPastDate = d < new Date(new Date().setHours(0,0,0,0)) || r <= d;
+                                              const reason = isPastDate
+                                                ? (lang === 'en' ? 'Past date or invalid range' : 'تاريخ مضى أو نطاق غير صالح')
+                                                : (lang === 'en' ? 'No flights on this date combination' : 'لا رحلات متاحة لهذا التوليف');
+                                              return (
+                                                <td
+                                                  key={d.toISOString()}
+                                                  className="border border-slate-100 p-4 text-center bg-slate-50/20 text-slate-300 text-xs font-medium select-none group/cell relative"
+                                                  title={reason}
+                                                  aria-label={`${localT.notAvailable}: ${reason}`}
+                                                >
+                                                  <span className="select-none">{localT.notAvailable}</span>
+                                                  {/* Tooltip */}
+                                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded-lg whitespace-nowrap opacity-0 group-hover/cell:opacity-100 pointer-events-none transition-opacity duration-150 z-10">
+                                                    {reason}
+                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                                                  </div>
+                                                </td>
+                                              );
+                                            }
+
+                                            return (
+                                              <td
+                                                key={d.toISOString()}
+                                                onClick={() => handleCellClick(d, r)}
+                                                className={`border p-4 text-center cursor-pointer transition-all relative ${
+                                                  isSelectedCell
+                                                    ? 'border-tarco-blue bg-tarco-blue/5 shadow-inner ring-2 ring-tarco-blue ring-inset'
+                                                    : 'border-slate-100 hover:bg-slate-50'
+                                                }`}
+                                              >
+                                                <div className={`text-sm font-black ${isSelectedCell ? 'text-tarco-blue' : 'text-slate-700'}`}>
+                                                  {formatPrice(price)}
+                                                </div>
+                                                {isCheapest && (
+                                                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[7px] font-black uppercase rounded-full">
+                                                    {localT.cheapest}
+                                                  </span>
+                                                )}
+                                              </td>
+                                            );
+                                          })}
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              /* 1D Departure Strip (One-Way) */
+                              <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                    {lang === 'en' ? 'Shift Days' : 'إزاحة الأيام'}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setDepartureOffset(p => p - 1)}
+                                      className="p-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-tarco-blue shadow-sm transition-all"
+                                      title="Shift Dates Left"
+                                    >
+                                      <ChevronLeft size={16} />
+                                    </button>
+                                    <button
+                                      onClick={() => setDepartureOffset(p => p + 1)}
+                                      className="p-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-tarco-blue shadow-sm transition-all"
+                                      title="Shift Dates Right"
+                                    >
+                                      <ChevronRight size={16} />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
+                                  {depDates.map(d => {
+                                    const price = getCellPrice(d, null, selectedClass);
+                                    const isSelected = departureDate && d.toDateString() === departureDate.toDateString();
+                                    const isCheapest = cheapest1D.cheapestDep && d.toDateString() === cheapest1D.cheapestDep.toDateString();
+
+                                    if (price === null) {
+                                      return (
+                                        <div key={d.toISOString()} className="border border-slate-100 bg-slate-50/50 p-4 rounded-2xl text-center text-slate-300 text-xs font-semibold select-none">
+                                          <div className="text-[9px] uppercase tracking-widest text-slate-400 mb-1">
+                                            {d.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { weekday: 'short', day: 'numeric' })}
+                                          </div>
+                                          {localT.notAvailable}
+                                        </div>
+                                      );
+                                    }
+
+                                    return (
+                                      <div
+                                        key={d.toISOString()}
+                                        onClick={() => {
+                                          setDepartureDate(d);
+                                          setDepartureOffset(0);
+                                        }}
+                                        className={`border p-4 rounded-2xl text-center cursor-pointer transition-all ${
+                                          isSelected
+                                            ? 'border-tarco-blue bg-tarco-blue/5 shadow-md ring-2 ring-tarco-blue'
+                                            : 'border-slate-100 bg-white hover:border-slate-200'
+                                        }`}
+                                      >
+                                        <div className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-tarco-blue' : 'text-slate-400'}`}>
+                                          {d.toLocaleDateString(lang === 'en' ? 'en-US' : 'ar-EG', { weekday: 'short', day: 'numeric' })}
+                                        </div>
+                                        <div className={`text-base font-black mt-2 ${isSelected ? 'text-tarco-blue' : 'text-slate-700'}`}>
+                                          {formatPrice(price)}
+                                        </div>
+                                        {isCheapest && (
+                                          <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-extrabold uppercase rounded-full">
+                                            {localT.cheapest}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
-                            </div>
+                            )}
+                          </div>
 
-                            <ul className="space-y-3">
-                              {fare.features.map((feature, i) => (
-                                <FeatureItem key={i} feature={feature} lang={lang} />
-                              ))}
-                            </ul>
+                          {/* Dynamic Fare Cards Selection (Mobile only, hidden on desktop) */}
+                          <div className="lg:hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {FARES.map((fare, idx) => {
+                              const dynamicPrice = getFarePrice(fare.id, selectedCellPrice);
+                              const isSelected = selectedFare?.id === fare.id;
 
+                              return (
+                                <FareCard
+                                  key={fare.id}
+                                  fare={fare}
+                                  dynamicPrice={dynamicPrice}
+                                  isSelected={isSelected}
+                                  lang={lang}
+                                  onClick={() => {
+                                    const targetClass = fare.id === 'business' ? 'business' : 'economy';
+                                    setSelectedClass(targetClass);
+                                    setSelectedFare({ ...fare, price: dynamicPrice });
+                                  }}
+                                  t={t}
+                                  formatPrice={formatPrice}
+                                  delayIndex={idx}
+                                />
+                              );
+                            })}
+                          </div>
+
+                          {/* Navigation Buttons */}
+                          <div className="flex justify-between items-center pt-8 border-t border-slate-200">
+                            <button onClick={() => setStep('search')} className="text-slate-400 font-bold transition-colors duration-150 hover:text-tarco-navy">{t.results.back}</button>
                             <button
-                              className={`w-full py-4 rounded-2xl font-bold transition-all ${selectedFare?.id === fare.id
-                                  ? 'bg-tarco-navy text-white'
-                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              disabled={!selectedFare}
+                              onClick={nextStep}
+                              className={`px-12 py-4 rounded-2xl font-bold shadow-lg transition-[background-color,transform,box-shadow] duration-150 ${
+                                selectedFare
+                                  ? 'bg-tarco-red text-white hover:bg-red-600 active:scale-[0.97]'
+                                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                 }`}
                             >
-                              {selectedFare?.id === fare.id ? t.results.selected : t.results.select}
+                              {t.results.continue}
                             </button>
                           </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    <div className="flex justify-between items-center pt-8 border-t border-slate-200">
-                      <button onClick={() => setStep('search')} className="text-slate-400 font-bold hover:text-tarco-navy transition-colors">{t.results.back}</button>
-                      <button
-                        disabled={!selectedFare}
-                        onClick={nextStep}
-                        className={`px-12 py-4 rounded-2xl font-bold shadow-lg transition-all ${selectedFare
-                            ? 'bg-tarco-red text-white hover:bg-red-600 active:scale-95'
-                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                          }`}
-                      >
-                        {t.results.continue}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
 
                 {step === 'services' && (
                   <motion.div
@@ -2054,56 +2884,111 @@ export default function App() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
+                    className="space-y-8 animate-fade"
                   >
-                    <div className="text-center space-y-2">
-                      <h2 className="text-3xl font-bold text-tarco-navy">{t.services.title}</h2>
-                      <p className="text-slate-500">{t.services.subtitle}</p>
-                    </div>
+                    {renderBookingHeader()}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {EXTRA_SERVICES.map((service) => (
-                        <motion.div
-                          key={service.id}
-                          whileHover={{ scale: 1.02 }}
-                          onClick={() => toggleService(service.id)}
-                          className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-center gap-6 ${selectedServices.includes(service.id)
-                              ? 'border-tarco-blue bg-white shadow-xl'
-                              : 'border-slate-100 bg-white hover:border-slate-200'
-                            }`}
-                        >
-                          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${selectedServices.includes(service.id) ? 'bg-tarco-blue text-white' : 'bg-slate-50 text-slate-400'}`}>
-                            <service.icon size={32} />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-tarco-blue">{t.serviceItems[service.id as keyof typeof t.serviceItems].name}</h3>
-                            <p className="text-xs text-slate-400">{t.serviceItems[service.id as keyof typeof t.serviceItems].desc}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-black text-tarco-blue">${service.price}</p>
-                            <div className={`w-6 h-6 rounded-full border-2 mt-2 flex items-center justify-center transition-all ${selectedServices.includes(service.id) ? 'bg-tarco-red border-tarco-red' : 'border-slate-200'}`}>
-                              {selectedServices.includes(service.id) && <Check size={14} className="text-white" />}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                      {/* Main content: Extra Services selection */}
+                      <div className="lg:col-span-9 space-y-8 min-w-0">
+                        <div className="space-y-2">
+                          <h2 className="text-3xl font-black text-tarco-navy">{t.services.title}</h2>
+                          <p className="text-slate-500">{t.services.subtitle}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {EXTRA_SERVICES.map((service) => (
+                            <motion.div
+                              key={service.id}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={() => toggleService(service.id)}
+                              className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-center gap-6 ${selectedServices.includes(service.id)
+                                  ? 'border-tarco-blue bg-white shadow-xl'
+                                  : 'border-slate-100 bg-white hover:border-slate-200'
+                                }`}
+                            >
+                              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${selectedServices.includes(service.id) ? 'bg-tarco-blue text-white' : 'bg-slate-50 text-slate-400'}`}>
+                                <service.icon size={32} />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-bold text-tarco-blue">{t.serviceItems[service.id as keyof typeof t.serviceItems].name}</h3>
+                                <p className="text-xs text-slate-400">{t.serviceItems[service.id as keyof typeof t.serviceItems].desc}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-black text-tarco-blue">{formatPrice(service.price)}</p>
+                                <div className={`w-6 h-6 rounded-full border-2 mt-2 flex items-center justify-center transition-all ${selectedServices.includes(service.id) ? 'bg-tarco-red border-tarco-red' : 'border-slate-200'}`}>
+                                  {selectedServices.includes(service.id) && <Check size={14} className="text-white" />}
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        {/* Navigation back button */}
+                        <div className="flex justify-between items-center pt-8 border-t border-slate-200">
+                          <button
+                            onClick={() => setStep('results')}
+                            className="text-slate-400 font-bold hover:text-tarco-navy transition-colors duration-150 flex items-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
+                          >
+                            {lang === 'en' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                            {t.services.back}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Sidebar summary panel */}
+                      <div className="lg:col-span-3 space-y-6">
+                        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-6 sticky top-24">
+                          <h3 className="text-xl font-bold text-tarco-navy">{t.seats.summary}</h3>
+
+                          <div className="space-y-4">
+                            {/* Selected Fare Class */}
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-500">{t.seats.fare} ({selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business})</span>
+                              <span className="font-bold text-tarco-navy">{selectedFare ? formatPrice(selectedFare.price) : ''}</span>
+                            </div>
+
+                            {/* Extra Services List */}
+                            {selectedServices.length > 0 && (
+                              <div className="space-y-2 pt-2 border-t border-slate-50">
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{t.seats.extra}</p>
+                                {selectedServices.map(id => {
+                                  const s = EXTRA_SERVICES.find(x => x.id === id);
+                                  return (
+                                    <div key={id} className="flex justify-between text-sm">
+                                      <span className="text-slate-500">{t.serviceItems[id as keyof typeof t.serviceItems].name}</span>
+                                      <span className="font-bold text-tarco-navy">{s ? formatPrice(s.price) : ''}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Running Total */}
+                            <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
+                              <span className="font-bold text-tarco-navy">{t.seats.total}</span>
+                              <span className="text-3xl font-black text-tarco-navy">
+                                {formatPrice(
+                                  (selectedFare?.price || 0) +
+                                  selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)
+                                )}
+                              </span>
                             </div>
                           </div>
-                        </motion.div>
-                      ))}
-                    </div>
 
-                    <div className="flex justify-between items-center pt-8 border-t border-slate-200">
-                      <button onClick={() => setStep('results')} className="text-slate-400 font-bold hover:text-tarco-navy transition-colors">{t.services.back}</button>
-                      <div className="flex items-center gap-8">
-                        <div className="text-right">
-                          <p className="text-[10px] font-black text-slate-400 uppercase">{t.services.total}</p>
-                          <p className="text-xl font-black text-tarco-blue">
-                            ${selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)}
-                          </p>
+                          <div className="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-50">
+                            <ShieldCheck size={16} className="text-emerald-500" />
+                            {t.seats.secure}
+                          </div>
+
+                          <button
+                            onClick={nextStep}
+                            className="w-full py-4 bg-tarco-red hover:bg-red-600 text-white rounded-2xl font-bold shadow-lg shadow-red-900/10 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
+                          >
+                            {t.services.continue}
+                            {lang === 'en' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                          </button>
                         </div>
-                        <button
-                          onClick={nextStep}
-                          className="px-12 py-4 bg-tarco-red text-white rounded-2xl font-bold shadow-lg hover:bg-red-600 active:scale-95 transition-all"
-                        >
-                          {t.services.continue}
-                        </button>
                       </div>
                     </div>
                   </motion.div>
@@ -2115,129 +3000,154 @@ export default function App() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="grid grid-cols-1 lg:grid-cols-12 gap-12"
+                    className="space-y-8 animate-fade"
                   >
-                    <div className="lg:col-span-8 space-y-8">
-                      <div>
-                        <h2 className="text-3xl font-bold text-tarco-navy">{t.seats.title}</h2>
-                        <p className="text-slate-500">{t.seats.subtitle}</p>
-                      </div>
+                    {renderBookingHeader()}
 
-                      {/* Seat Map */}
-                      <div className="bg-white rounded-[40px] p-12 shadow-xl border border-slate-100 relative overflow-hidden">
-                        {/* Airplane Shape Decoration */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-full bg-slate-50/50 rounded-t-[200px] border-x border-slate-100 pointer-events-none">
-                          {/* Cockpit Area */}
-                          <div className="absolute top-0 left-0 right-0 h-48 bg-slate-100/50 rounded-t-[200px] border-b border-slate-200 flex flex-col items-center justify-center gap-2">
-                            <div className="flex gap-8">
-                              <div className="w-16 h-8 bg-slate-200 rounded-tl-full" />
-                              <div className="w-16 h-8 bg-slate-200 rounded-tr-full" />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                      {/* Main content: Seat Selection */}
+                      <div className="lg:col-span-9 space-y-8 min-w-0">
+                        <div className="space-y-2">
+                          <h2 className="text-3xl font-black text-tarco-navy">{t.seats.title}</h2>
+                          <p className="text-slate-500">{t.seats.subtitle}</p>
+                        </div>
+
+                        {/* Seat Map */}
+                        <div className="bg-white rounded-[40px] p-12 shadow-xl border border-slate-100 relative overflow-hidden">
+                          {/* Airplane Shape Decoration */}
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-full bg-slate-50/50 rounded-t-[200px] border-x border-slate-100 pointer-events-none">
+                            {/* Cockpit Area */}
+                            <div className="absolute top-0 left-0 right-0 h-48 bg-slate-100/50 rounded-t-[200px] border-b border-slate-200 flex flex-col items-center justify-center gap-2">
+                              <div className="flex gap-8">
+                                <div className="w-16 h-8 bg-slate-200 rounded-tl-full" />
+                                <div className="w-16 h-8 bg-slate-200 rounded-tr-full" />
+                              </div>
+                              <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">{t.seats.deck}</span>
                             </div>
-                            <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">{t.seats.deck}</span>
+                          </div>
+
+                          <div className="relative z-10 space-y-4 max-w-md mx-auto pt-48">
+                            {/* Column Labels */}
+                            <div className="grid grid-cols-6 gap-3 mb-8 text-center text-[10px] font-black text-slate-300">
+                              <span>A</span><span>B</span><span>C</span><span className="opacity-0">|</span><span>D</span><span>E</span><span>F</span>
+                            </div>
+
+                            {SEATS.map((row, rowIndex) => (
+                              <div key={rowIndex} className="grid grid-cols-6 gap-3 items-center">
+                                {row.map((seat, colIndex) => (
+                                  <React.Fragment key={seat.id}>
+                                    {colIndex === 3 && <div className="w-4 h-full flex items-center justify-center text-[10px] font-bold text-slate-200">{rowIndex + 1}</div>}
+                                    <motion.button
+                                      whileHover={seat.type !== 'occupied' ? { scale: 1.1 } : {}}
+                                      whileTap={seat.type !== 'occupied' ? { scale: 0.95 } : {}}
+                                      disabled={seat.type === 'occupied'}
+                                      onClick={() => setSelectedSeat(seat)}
+                                      className={`relative aspect-square rounded-lg flex items-center justify-center transition-all ${seat.type === 'occupied'
+                                          ? 'bg-slate-200 cursor-not-allowed'
+                                          : selectedSeat?.id === seat.id
+                                            ? 'bg-red-500 text-white shadow-lg shadow-red-200'
+                                            : seat.price > 0
+                                              ? 'bg-tarco-navy text-white'
+                                              : 'bg-blue-100 text-tarco-navy hover:bg-blue-200'
+                                        }`}
+                                    >
+                                      <Armchair size={16} />
+                                      {selectedSeat?.id === seat.id && seat.price > 0 && (
+                                        <motion.div
+                                          initial={{ opacity: 0, y: 10 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-20"
+                                        >
+                                          {lang === 'en' ? 'Legroom' : 'مساحة إضافية'}: +{formatPrice(seat.price)}
+                                        </motion.div>
+                                      )}
+                                    </motion.button>
+                                  </React.Fragment>
+                                ))}
+                              </div>
+                            ))}
                           </div>
                         </div>
 
-                        <div className="relative z-10 space-y-4 max-w-md mx-auto pt-48">
-                          {/* Column Labels */}
-                          <div className="grid grid-cols-6 gap-3 mb-8 text-center text-[10px] font-black text-slate-300">
-                            <span>A</span><span>B</span><span>C</span><span className="opacity-0">|</span><span>D</span><span>E</span><span>F</span>
-                          </div>
-
-                          {SEATS.map((row, rowIndex) => (
-                            <div key={rowIndex} className="grid grid-cols-6 gap-3 items-center">
-                              {row.map((seat, colIndex) => (
-                                <React.Fragment key={seat.id}>
-                                  {colIndex === 3 && <div className="w-4 h-full flex items-center justify-center text-[10px] font-bold text-slate-200">{rowIndex + 1}</div>}
-                                  <motion.button
-                                    whileHover={seat.type !== 'occupied' ? { scale: 1.1 } : {}}
-                                    whileTap={seat.type !== 'occupied' ? { scale: 0.95 } : {}}
-                                    disabled={seat.type === 'occupied'}
-                                    onClick={() => setSelectedSeat(seat)}
-                                    className={`relative aspect-square rounded-lg flex items-center justify-center transition-all ${seat.type === 'occupied'
-                                        ? 'bg-slate-200 cursor-not-allowed'
-                                        : selectedSeat?.id === seat.id
-                                          ? 'bg-red-500 text-white shadow-lg shadow-red-200'
-                                          : seat.price > 0
-                                            ? 'bg-tarco-navy text-white'
-                                            : 'bg-blue-100 text-tarco-navy hover:bg-blue-200'
-                                      }`}
-                                  >
-                                    <Armchair size={16} />
-                                    {selectedSeat?.id === seat.id && seat.price > 0 && (
-                                      <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-20"
-                                      >
-                                        Legroom: +${seat.price}
-                                      </motion.div>
-                                    )}
-                                  </motion.button>
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          ))}
+                        {/* Navigation back button */}
+                        <div className="flex justify-between items-center pt-8 border-t border-slate-200">
+                          <button
+                            onClick={() => setStep('services')}
+                            className="text-slate-400 font-bold hover:text-tarco-navy transition-colors duration-150 flex items-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
+                          >
+                            {lang === 'en' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                            {lang === 'en' ? 'Back to Services' : 'العودة للخدمات'}
+                          </button>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="lg:col-span-4 space-y-6">
-                      <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 space-y-6 sticky top-24">
-                        <h3 className="text-xl font-bold text-tarco-navy">{t.seats.summary}</h3>
+                      {/* Sidebar summary panel */}
+                      <div className="lg:col-span-3 space-y-6">
+                        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-6 sticky top-24">
+                          <h3 className="text-xl font-bold text-tarco-navy">{t.seats.summary}</h3>
 
-                        <div className="space-y-4">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">{t.seats.fare} ({selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business})</span>
-                            <span className="font-bold">${selectedFare?.price}</span>
-                          </div>
-                          {selectedServices.length > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-[10px] font-black text-slate-300 uppercase">{t.seats.extra}</p>
-                              {selectedServices.map(id => {
-                                const s = EXTRA_SERVICES.find(x => x.id === id);
-                                return (
-                                  <div key={id} className="flex justify-between text-sm">
-                                    <span className="text-slate-500">{t.serviceItems[id as keyof typeof t.serviceItems].name}</span>
-                                    <span className="font-bold">${s?.price}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                          {selectedSeat && (
+                          <div className="space-y-4">
+                            {/* Selected Fare Class */}
                             <div className="flex justify-between text-sm">
-                              <span className="text-slate-500">{t.seats.seat} {selectedSeat.label}</span>
-                              <span className="font-bold">${selectedSeat.price}</span>
+                              <span className="text-slate-500">{t.seats.fare} ({selectedFare?.id === 'lite' ? t.fares.lite : selectedFare?.id === 'semi' ? t.fares.semi : t.fares.business})</span>
+                              <span className="font-bold text-tarco-navy">{selectedFare ? formatPrice(selectedFare.price) : ''}</span>
                             </div>
-                          )}
-                          <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
-                            <span className="font-bold text-tarco-navy">{t.seats.total}</span>
-                            <span className="text-3xl font-black text-tarco-navy">
-                              ${(selectedFare?.price || 0) +
-                                (selectedSeat?.price || 0) +
-                                selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)
-                              }
-                            </span>
-                          </div>
-                        </div>
 
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3 text-xs text-slate-500">
+                            {/* Extra Services List */}
+                            {selectedServices.length > 0 && (
+                              <div className="space-y-2 pt-2 border-t border-slate-50">
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{t.seats.extra}</p>
+                                {selectedServices.map(id => {
+                                  const s = EXTRA_SERVICES.find(x => x.id === id);
+                                  return (
+                                    <div key={id} className="flex justify-between text-sm">
+                                      <span className="text-slate-500">{t.serviceItems[id as keyof typeof t.serviceItems].name}</span>
+                                      <span className="font-bold text-tarco-navy">{s ? formatPrice(s.price) : ''}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Selected Seat */}
+                            {selectedSeat && (
+                              <div className="flex justify-between text-sm pt-2 border-t border-slate-50">
+                                <span className="text-slate-500">{t.seats.seat} {selectedSeat.label}</span>
+                                <span className="font-bold text-tarco-navy">{formatPrice(selectedSeat.price)}</span>
+                              </div>
+                            )}
+
+                            {/* Running Total */}
+                            <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
+                              <span className="font-bold text-tarco-navy">{t.seats.total}</span>
+                              <span className="text-3xl font-black text-tarco-navy">
+                                {formatPrice(
+                                  (selectedFare?.price || 0) +
+                                  (selectedSeat?.price || 0) +
+                                  selectedServices.reduce((acc, id) => acc + (EXTRA_SERVICES.find(s => s.id === id)?.price || 0), 0)
+                                )}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-50">
                             <ShieldCheck size={16} className="text-emerald-500" />
                             {t.seats.secure}
                           </div>
-                        </div>
 
-                        <button
-                          onClick={nextStep}
-                          disabled={!selectedSeat}
-                          className={`w-full py-4 rounded-2xl font-bold shadow-lg transition-all ${selectedSeat
-                              ? 'bg-tarco-navy text-white hover:bg-slate-800 active:scale-95'
-                              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                          <button
+                            onClick={nextStep}
+                            disabled={!selectedSeat}
+                            className={`w-full py-4 rounded-2xl font-bold shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 text-xs uppercase tracking-widest ${
+                              selectedSeat
+                                ? 'bg-tarco-red hover:bg-red-600 text-white shadow-red-900/10 active:scale-95'
+                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                             }`}
-                        >
-                          {t.seats.confirm}
-                        </button>
+                          >
+                            {t.seats.confirm}
+                            {lang === 'en' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -2255,7 +3165,7 @@ export default function App() {
                         <Check size={40} />
                       </div>
                       <h2 className="text-4xl font-black text-tarco-navy">{t.success.title}</h2>
-                      <p className="text-slate-500">{t.success.subtitle} {to} {t.success.begins}</p>
+                      <p className="text-slate-500">{t.success.subtitle.replace('{to}', to)}</p>
                     </div>
 
                     {/* Digital Boarding Pass */}
@@ -2284,7 +3194,7 @@ export default function App() {
                           </div>
                           <div className="flex flex-col items-center gap-1">
                             <div className="w-12 h-[1px] bg-white/20"></div>
-                            <Plane size={14} className="text-tarco-gold" />
+                            <Plane size={14} className="text-tarco-red" />
                             <div className="w-12 h-[1px] bg-white/20"></div>
                           </div>
                           <div className="text-right">
@@ -2398,7 +3308,7 @@ export default function App() {
                   </div>
                   <div className="p-10 space-y-6">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-tarco-gold">
+                      <div className="flex items-center gap-2 text-tarco-red">
                         <Star size={16} fill="currentColor" />
                         <span className="text-[10px] font-black uppercase tracking-widest">{t.upgrade.subtitle}</span>
                       </div>
@@ -2406,7 +3316,9 @@ export default function App() {
                     </div>
 
                     <p className="text-slate-500 text-sm leading-relaxed">
-                      {t.upgrade.desc}
+                      {lang === 'en'
+                        ? `Upgrade to Business Class for only ${formatPrice(150)} more and enjoy premium comfort, gourmet meals, and lounge access.`
+                        : `قم بالترقية إلى درجة الأعمال مقابل ${formatPrice(150)} إضافية فقط واستمتع براحة مميزة ووجبات فاخرة ودخول إلى الصالة.`}
                     </p>
 
                     <div className="space-y-3">
@@ -2463,31 +3375,31 @@ export default function App() {
                 referrerPolicy="no-referrer"
               />
               <div className="flex gap-12 text-xs font-bold uppercase tracking-widest">
-                <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Privacy' : 'الخصوصية'}</a>
-                <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Terms' : 'الشروط'}</a>
-                <a href="#" className="hover:text-tarco-gold transition-colors">{lang === 'en' ? 'Contact' : 'اتصل بنا'}</a>
+                <a href="#" className="hover:text-tarco-red transition-colors">{lang === 'en' ? 'Privacy' : 'الخصوصية'}</a>
+                <a href="#" className="hover:text-tarco-red transition-colors">{lang === 'en' ? 'Terms' : 'الشروط'}</a>
+                <a href="#" className="hover:text-tarco-red transition-colors">{lang === 'en' ? 'Contact' : 'اتصل بنا'}</a>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pt-16 border-t border-white/10">
               <div className="space-y-4">
-                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'About Tarco' : 'عن تاركو'}</h4>
+                <h4 className="text-tarco-red font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'About Tarco' : 'عن تاركو'}</h4>
                 <p className="text-sm text-slate-400 leading-relaxed">
                   {t.excellence.desc}
                 </p>
               </div>
               <div className="space-y-4">
-                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Network' : 'شبكة وجهاتنا'}</h4>
+                <h4 className="text-tarco-red font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Network' : 'شبكة وجهاتنا'}</h4>
                 <p className="text-sm text-slate-400 leading-relaxed">
                   {lang === 'en' ? 'Connecting major cities including Khartoum, Dubai, Riyadh, Cairo, and Addis Ababa with modern aircraft and exceptional service.' : 'نربط المدن الكبرى بما في ذلك الخرطوم ودبي والرياض والقاهرة وأديس أبابا بطائرات حديثة وخدمة استثنائية.'}
                 </p>
               </div>
               <div className="space-y-4">
-                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Offices' : 'مكاتبنا'}</h4>
+                <h4 className="text-tarco-red font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Our Offices' : 'مكاتبنا'}</h4>
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
-                      <MapPin size={10} className="text-tarco-gold" />
+                      <MapPin size={10} className="text-tarco-red" />
                       {t.contacts.headOffice}
                     </p>
                     <p className="text-xs text-slate-400">{t.contacts.headAddress}</p>
@@ -2498,7 +3410,7 @@ export default function App() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">
-                      <MapPin size={10} className="text-tarco-gold" />
+                      <MapPin size={10} className="text-tarco-red" />
                       {t.contacts.madaniOffice}
                     </p>
                     <p className="text-xs text-slate-400">{t.contacts.madaniAddress}</p>
@@ -2514,9 +3426,9 @@ export default function App() {
                 </div>
               </div>
               <div className="space-y-4">
-                <h4 className="text-tarco-gold font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Newsletter' : 'النشرة البريدية'}</h4>
+                <h4 className="text-tarco-red font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Newsletter' : 'النشرة البريدية'}</h4>
                 <div className="flex gap-2">
-                  <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-gold" placeholder={lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'} />
+                  <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-red" placeholder={lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'} />
                   <button className="bg-tarco-red px-4 py-2 rounded-lg font-bold text-xs">{lang === 'en' ? 'Join' : 'اشترك'}</button>
                 </div>
               </div>
@@ -2530,7 +3442,7 @@ export default function App() {
                     href="https://console.firebase.google.com/project/gen-lang-client-0834655921/firestore/databases/ai-studio-2c905c97-48ea-4e14-877c-1bd9ef21ebd9/data"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-tarco-gold hover:underline flex items-center gap-2"
+                    className="text-tarco-red hover:underline flex items-center gap-2"
                   >
                     <ShieldCheck size={12} />
                     Manage Assets

@@ -101,7 +101,7 @@ export const StartupLoader: React.FC<StartupLoaderProps> = ({ onComplete }) => {
             transition={{ delay: 1 }}
             className="text-white text-3xl font-black tracking-[0.4em] uppercase"
           >
-            Tarco <span className="text-tarco-gold">Aviation</span>
+            Tarco <span className="text-tarco-red">Aviation</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -116,24 +116,24 @@ export const StartupLoader: React.FC<StartupLoaderProps> = ({ onComplete }) => {
         {/* Progress Bar (Flight Path Style) */}
         <div className="w-64 space-y-3">
           <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest text-white/60">
-            <span className={progress > 10 ? "text-tarco-gold transition-colors" : ""}>KRT</span>
+            <span className={progress > 10 ? "text-tarco-red transition-colors" : ""}>KRT</span>
             <div className="flex-1 flex justify-center mb-1 px-4">
               <motion.div 
                 animate={{ x: [-10, 10, -10] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tarco-gold rotate-90">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tarco-red rotate-90">
                     <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
                  </svg>
               </motion.div>
             </div>
-            <span className={progress === 100 ? "text-tarco-gold transition-colors" : ""}>DXB</span>
+            <span className={progress === 100 ? "text-tarco-red transition-colors" : ""}>DXB</span>
           </div>
           <div className="h-1 bg-white/10 rounded-full overflow-hidden relative">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="absolute inset-y-0 left-0 bg-tarco-gold"
+              className="absolute inset-y-0 left-0 bg-tarco-red"
             />
           </div>
           <p className="text-center text-[9px] font-bold text-white/30 uppercase tracking-widest pt-2">

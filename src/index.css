@@ -4,15 +4,288 @@
 @theme {
   --color-tarco-red: #E31E24;
   --color-tarco-blue: #1D4296;
-  --color-tarco-navy: #003366;
-  --color-tarco-gold: #FFCC00;
+  --color-tarco-navy: #041438;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-arabic: "Cairo", sans-serif;
+
+  /* Emil Kowalski custom easing curves — built-in easings are too weak */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@layer utilities {
-  .backdrop-blur-md {
-    transition: backdrop-filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+/* ─────────────────────────────────────────────────────
+   GLOBAL BUTTON PRESS FEEDBACK
+   Every pressable element gets scale(0.97) on :active.
+   This gives instant tactile feedback (100-160ms).
+   ───────────────────────────────────────────────────── */
+@layer base {
+  button,
+  [role="button"] {
+    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    button:active,
+    [role="button"]:active {
+      transform: scale(0.97);
+    }
+  }
+
+  /* ── Focus-visible ring: keyboard users get a clear indicator ── */
+  /* Reset browser default outline */
+  *:focus {
+    outline: none;
+  }
+
+  /* Restore for keyboard navigation only */
+  *:focus-visible {
+    outline: 2px solid #1D4296;
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  /* Override for elements that use their own focus style */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #1D4296;
+    outline-offset: 0px;
+    border-radius: 4px;
   }
 }
 
+/* ─────────────────────────────────────────────────────
+   NO-SCROLLBAR UTILITY
+   ───────────────────────────────────────────────────── */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Backdrop blur with correct property-specific transition */
+  .backdrop-blur-md {
+    transition: backdrop-filter 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   POPOVER / DROPDOWN ORIGIN-AWARE ANIMATION
+   Popovers scale from their trigger, not from center.
+   Modals are exempt — they stay centered.
+   ───────────────────────────────────────────────────── */
+@layer components {
+  .nav-dropdown {
+    transform-origin: top center;
+    transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1),
+                transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* ─── FARE CARD — premium hover lift ─── */
+  .fare-card {
+    transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 220ms cubic-bezier(0.23, 1, 0.32, 1),
+                border-color 180ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .fare-card:hover {
+      transform: translateY(-6px);
+    }
+  }
+
+  .fare-card:active {
+    transform: scale(0.98) translateY(-2px);
+  }
+
+  /* ─── STEP TRACKER ICON — spring-like bounce on active ─── */
+  .step-icon-active {
+    animation: stepPop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes stepPop {
+    from { transform: scale(0.85); }
+    to   { transform: scale(1.1); }
+  }
+
+  /* ─── CONNECTOR LINE — clip-path reveal ─── */
+  .step-connector {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .step-connector::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-tarco-blue);
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .step-connector.is-past::after {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ─── DESTINATION CARD — correct property-specific transition ─── */
+  .dest-card-img {
+    transition: transform 700ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dest-card:hover .dest-card-img {
+      transform: scale(1.06);
+    }
+  }
+
+  /* ─── MATRIX CELL — crisp interactive feel ─── */
+  .matrix-cell {
+    transition: background-color 120ms ease,
+                box-shadow 120ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .matrix-cell:hover {
+      background-color: rgb(241 245 249);
+    }
+  }
+
+  .matrix-cell:active {
+    transform: scale(0.97);
+  }
+
+  /* ─── SERVICE CARD — selection bounce ─── */
+  .service-card {
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1),
+                border-color 150ms ease,
+                box-shadow 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .service-card:hover {
+      transform: scale(1.02);
+    }
+  }
+
+  .service-card:active {
+    transform: scale(0.98);
+  }
+
+  /* ─── STAGGER ANIMATIONS for list items ─── */
+  .stagger-item {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: staggerFadeIn 300ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  .stagger-item:nth-child(1) { animation-delay: 0ms; }
+  .stagger-item:nth-child(2) { animation-delay: 50ms; }
+  .stagger-item:nth-child(3) { animation-delay: 100ms; }
+  .stagger-item:nth-child(4) { animation-delay: 150ms; }
+  .stagger-item:nth-child(5) { animation-delay: 200ms; }
+  .stagger-item:nth-child(6) { animation-delay: 250ms; }
+  .stagger-item:nth-child(7) { animation-delay: 300ms; }
+  .stagger-item:nth-child(8) { animation-delay: 350ms; }
+
+  @keyframes staggerFadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ─── CTA BUTTON — "Book Now" floating button ─── */
+  .cta-float-btn {
+    transition: background-color 150ms ease,
+                transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cta-float-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -8px rgba(227, 30, 36, 0.45);
+    }
+  }
+
+  .cta-float-btn:active {
+    transform: scale(0.96) translateY(0);
+  }
+
+  /* ─── NAV LINKS ─── */
+  .nav-link {
+    transition: color 150ms ease;
+  }
+
+  /* ─── SEAT BUTTON — satisfying press ─── */
+  .seat-btn {
+    transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1),
+                background-color 120ms ease,
+                box-shadow 120ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .seat-btn:not(:disabled):hover {
+      transform: scale(1.12);
+    }
+  }
+
+  .seat-btn:not(:disabled):active {
+    transform: scale(0.93);
+  }
+
+  /* ─── CURRENCY / CLASS SELECTOR PILL ─── */
+  .selector-pill {
+    transition: background-color 150ms ease,
+                border-color 150ms ease,
+                color 150ms ease,
+                box-shadow 150ms ease;
+  }
+
+  .selector-pill:active {
+    transform: scale(0.96);
+  }
+
+  /* ─── PAGE ENTER — enter from scale(0.97) not scale(0) ─── */
+  @keyframes pageEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.97) translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .page-enter {
+    animation: pageEnter 350ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  /* ─── REDUCED MOTION — keep only opacity, remove movement ─── */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    /* Keep gentle fades for comprehension */
+    .page-enter,
+    .stagger-item {
+      animation: fadeOnly 200ms ease forwards;
+    }
+
+    @keyframes fadeOnly {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+  }
+}
