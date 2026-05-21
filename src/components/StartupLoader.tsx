@@ -5,8 +5,12 @@ interface StartupLoaderProps {
   onComplete: () => void;
 }
 
+const AIRPORT_CODES = ['DXB', 'JED', 'RUH', 'CAI', 'DOH', 'PZU', 'SHJ', 'DMM', 'ASM', 'ADD', 'EBB', 'MCT', 'KWI'];
+
 export const StartupLoader: React.FC<StartupLoaderProps> = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
+  const [finalDest] = useState(() => AIRPORT_CODES[Math.floor(Math.random() * AIRPORT_CODES.length)]);
+  const [currentCode, setCurrentCode] = useState(finalDest);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -17,12 +21,23 @@ export const StartupLoader: React.FC<StartupLoaderProps> = ({ onComplete }) => {
           return 100;
         }
         const diff = Math.random() * 15;
-        return Math.min(oldProgress + diff, 100);
+        const newProgress = Math.min(oldProgress + diff, 100);
+
+        // Dynamic ticker animation: shuffle codes during progress, then settle on finalDest
+        if (newProgress < 95) {
+          const tempCodes = AIRPORT_CODES.filter(code => code !== finalDest);
+          const randomTempCode = tempCodes[Math.floor(Math.random() * tempCodes.length)];
+          setCurrentCode(randomTempCode);
+        } else {
+          setCurrentCode(finalDest);
+        }
+
+        return newProgress;
       });
     }, 200);
 
     return () => clearInterval(timer);
-  }, [onComplete]);
+  }, [onComplete, finalDest]);
 
   return (
     <motion.div
@@ -116,7 +131,7 @@ export const StartupLoader: React.FC<StartupLoaderProps> = ({ onComplete }) => {
         {/* Progress Bar (Flight Path Style) */}
         <div className="w-64 space-y-3">
           <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest text-white/60">
-            <span className={progress > 10 ? "text-tarco-red transition-colors" : ""}>KRT</span>
+            <span className={`w-10 text-start ${progress > 10 ? "text-tarco-red transition-colors" : ""}`}>KRT</span>
             <div className="flex-1 flex justify-center mb-1 px-4">
               <motion.div 
                 animate={{ x: [-10, 10, -10] }}
@@ -127,7 +142,7 @@ export const StartupLoader: React.FC<StartupLoaderProps> = ({ onComplete }) => {
                  </svg>
               </motion.div>
             </div>
-            <span className={progress === 100 ? "text-tarco-red transition-colors" : ""}>DXB</span>
+            <span className={`w-10 text-end transition-colors ${progress >= 95 ? "text-tarco-red font-black" : ""}`}>{currentCode}</span>
           </div>
           <div className="h-1 bg-white/10 rounded-full overflow-hidden relative">
             <motion.div
