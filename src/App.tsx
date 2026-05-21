@@ -485,6 +485,18 @@ const TRANSLATIONS = {
       point1: 'Safety and Comfort First',
       point2: 'Professional Cabin Crew',
       point3: 'Modern Fleet'
+    },
+    newsletter: {
+      title: 'Subscribe to our Newsletter',
+      subtitle: 'Be the first to receive our exclusive offers and the latest news about our services.',
+      email: 'Email Address',
+      departure: 'Preferred Departure City',
+      agree: 'I wish to receive offers and news from Tarco Aviation. I am also aware of the privacy policy, and I know that I can unsubscribe at any time via the link at the bottom of each email I receive.',
+      button: 'Subscribe Now',
+      successTitle: 'Thank you for subscribing!',
+      successSub: "We've registered your preferences and will keep you updated.",
+      errEmail: 'Please enter a valid email address.',
+      errAgree: 'Please agree to the privacy terms.'
     }
   },
 
@@ -741,6 +753,18 @@ const TRANSLATIONS = {
       madaniOffice: 'مكتب مدني',
       headAddress: 'شارع أوماك، الخرطوم',
       madaniAddress: 'برج شيكان، شارع الماسه'
+    },
+    newsletter: {
+      title: 'اشترك في نشرتنا الإلكترونية',
+      subtitle: 'كن أول من يستقبل عروضنا الحصرية وآخر الأخبار عن خدماتنا.',
+      email: 'البريد الإلكتروني',
+      departure: 'مدينة المغادرة المفضلة',
+      agree: 'أرغب بتلقي العروض والأخبار من تاركو للطيران. كما أنني على علم بإشعار الخصوصية، وأعرف أن باستطاعتي إلغاء الاشتراك في أي وقت عبر الرابط الموجود أسفل كل رسالة تصلني.',
+      button: 'اشترك الآن',
+      successTitle: 'نشكرك على الاشتراك في نشرتنا البريدية!',
+      successSub: 'لقد قمنا بتسجيل تفضيلاتك وسنوافيك بكل جديد.',
+      errEmail: 'يرجى إدخال بريد إلكتروني صالح.',
+      errAgree: 'يرجى الموافقة على شروط الخصوصية.'
     }
   }
 };
@@ -1677,6 +1701,13 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSearchFlight, setSelectedSearchFlight] = useState<any | null>(null);
   const [selectedSearchRequirement, setSelectedSearchRequirement] = useState<any | null>(null);
+
+  // Newsletter states
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterDeparture, setNewsletterDeparture] = useState('');
+  const [newsletterAgreed, setNewsletterAgreed] = useState(false);
+  const [newsletterError, setNewsletterError] = useState<string | null>(null);
+  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
   useEffect(() => {
     if (!showSearch) {
@@ -3066,8 +3097,142 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* Premium Newsletter Subscription Banner */}
+                  <div className="relative min-h-[420px] rounded-[40px] overflow-hidden bg-slate-950 flex items-center shadow-2xl p-8 md:p-16">
+                    {/* Background Image of Cabin */}
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-80 z-0"
+                      style={{ backgroundImage: `url('/Images/newsletter_bg.png')` }}
+                    />
+                    
+                    {/* Shading/Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/70 to-transparent pointer-events-none z-10" />
 
+                    {/* Content Area */}
+                    <div className="relative w-full max-w-2xl z-20 text-white flex flex-col justify-center space-y-6 text-start">
+                      {newsletterSubscribed ? (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="space-y-4 py-8"
+                        >
+                          <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center justify-center text-emerald-400">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+                            {t.newsletter.successTitle}
+                          </h3>
+                          <p className="text-sm text-slate-300">
+                            {t.newsletter.successSub}
+                          </p>
+                        </motion.div>
+                      ) : (
+                        <>
+                          <div className="space-y-3">
+                            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+                              {t.newsletter.title}
+                            </h2>
+                            <p className="text-xs md:text-sm text-slate-200 font-normal leading-relaxed max-w-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+                              {t.newsletter.subtitle}
+                            </p>
+                          </div>
 
+                          <div className="space-y-4">
+                            {/* Inputs box */}
+                            <div className={`flex flex-col md:flex-row items-stretch md:items-center bg-white rounded-2xl overflow-hidden p-1.5 gap-2 md:gap-0 shadow-lg w-full max-w-xl ${lang === 'ar' ? 'md:flex-row-reverse' : ''}`}>
+                              {/* Email Input */}
+                              <input 
+                                type="email"
+                                value={newsletterEmail}
+                                onChange={(e) => {
+                                  setNewsletterEmail(e.target.value);
+                                  if (newsletterError) setNewsletterError(null);
+                                }}
+                                placeholder={t.newsletter.email}
+                                className={`flex-1 px-5 py-3 text-slate-800 bg-transparent outline-none text-sm font-semibold placeholder-slate-400 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                              />
+
+                              {/* Desktop Divider */}
+                              <div className="hidden md:block w-[1px] h-8 bg-slate-200" />
+
+                              {/* Preferred Departure City Dropdown */}
+                              <div className="relative w-full md:w-fit flex items-center">
+                                <select
+                                  value={newsletterDeparture}
+                                  onChange={(e) => setNewsletterDeparture(e.target.value)}
+                                  className={`w-full md:w-56 px-5 py-3 ${lang === 'ar' ? 'ps-10 pe-5 text-right' : 'pe-10 ps-5 text-left'} text-slate-700 bg-transparent outline-none text-sm font-semibold cursor-pointer appearance-none`}
+                                >
+                                  <option value="" className="text-slate-400">
+                                    {t.newsletter.departure}
+                                  </option>
+                                  {DESTINATIONS.map((dest) => (
+                                    <option key={dest.id} value={dest.id} className="text-slate-800">
+                                      {dest.name[lang]} ({dest.code})
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className={`absolute ${lang === 'ar' ? 'left-4' : 'right-4'} pointer-events-none text-slate-400`}>
+                                  <ChevronDown size={16} />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Privacy Checkbox */}
+                            <label className="flex items-start gap-3 cursor-pointer group select-none max-w-xl">
+                              <input 
+                                type="checkbox"
+                                checked={newsletterAgreed}
+                                onChange={(e) => {
+                                  setNewsletterAgreed(e.target.checked);
+                                  if (newsletterError) setNewsletterError(null);
+                                }}
+                                className="mt-1 accent-tarco-red rounded w-4 h-4 cursor-pointer"
+                              />
+                              <span className={`text-[10px] md:text-xs text-slate-200 leading-relaxed font-normal hover:text-white transition-colors ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                                {t.newsletter.agree}
+                              </span>
+                            </label>
+
+                            {/* Error Message */}
+                            {newsletterError && (
+                              <motion.p 
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-xs text-red-400 font-bold"
+                              >
+                                {newsletterError}
+                              </motion.p>
+                            )}
+
+                            {/* Subscribe button */}
+                            <button 
+                              onClick={() => {
+                                setNewsletterError(null);
+                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                if (!newsletterEmail || !emailRegex.test(newsletterEmail)) {
+                                  setNewsletterError(t.newsletter.errEmail);
+                                  return;
+                                }
+                                if (!newsletterAgreed) {
+                                  setNewsletterError(t.newsletter.errAgree);
+                                  return;
+                                }
+                                setNewsletterSubscribed(true);
+                                setNewsletterEmail('');
+                                setNewsletterDeparture('');
+                                setNewsletterAgreed(false);
+                              }}
+                              className="w-fit border border-white hover:bg-white hover:text-slate-950 transition-all font-bold tracking-widest uppercase text-[10px] md:text-xs rounded-full px-8 py-3.5 mt-2 active:scale-95 shadow-md shadow-black/10"
+                            >
+                              {t.newsletter.button}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
 
                 </div>
               </motion.div>
