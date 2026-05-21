@@ -3102,7 +3102,7 @@ export default function App() {
                     {/* Background Image of Cabin */}
                     <div 
                       className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-80 z-0"
-                      style={{ backgroundImage: `url('/Images/newsletter_bg.png')` }}
+                      style={{ backgroundImage: `url(${assets['newsletter_bg'] || '/Images/newsletter.png'})` }}
                     />
                     
                     {/* Shading/Gradient Overlay */}
