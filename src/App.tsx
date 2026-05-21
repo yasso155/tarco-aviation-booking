@@ -4644,7 +4644,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pt-16 border-t border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 pt-16 border-t border-white/10">
               <div className="space-y-4">
                 <h4 className="text-tarco-red font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'About Tarco' : 'عن تاركو'}</h4>
                 <p className="text-sm text-slate-400 leading-relaxed">
@@ -4686,13 +4686,6 @@ export default function App() {
                       madani.office@tarcoaviation.com
                     </p>
                   </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-tarco-red font-black uppercase tracking-widest text-xs">{lang === 'en' ? 'Newsletter' : 'النشرة البريدية'}</h4>
-                <div className="flex gap-2">
-                  <input className="bg-white/10 border border-white/10 rounded-lg px-4 py-2 text-sm flex-1 outline-none focus:border-tarco-red" placeholder={lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'} />
-                  <button className="bg-tarco-red px-4 py-2 rounded-lg font-bold text-xs">{lang === 'en' ? 'Join' : 'اشترك'}</button>
                 </div>
               </div>
             </div>
