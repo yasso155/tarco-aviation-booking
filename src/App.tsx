@@ -2767,37 +2767,7 @@ export default function App() {
                     >
                       {renderBookingHeader()}
 
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                        {/* Sidebar: Fare Cards only (Desktop) */}
-                        <div className="lg:col-span-3 space-y-6">
-                          {/* Desktop only: Vertical fare cards stacked in sidebar */}
-                          <div className="hidden lg:flex lg:flex-col lg:gap-6">
-                            {FARES.map((fare, idx) => {
-                              const dynamicPrice = getFarePrice(fare.id, selectedCellPrice);
-                              const isSelected = selectedFare?.id === fare.id;
-                              return (
-                                <FareCard
-                                  key={fare.id}
-                                  fare={fare}
-                                  dynamicPrice={dynamicPrice}
-                                  isSelected={isSelected}
-                                  lang={lang}
-                                  onClick={() => {
-                                    const targetClass = fare.id === 'business' ? 'business' : 'economy';
-                                    setSelectedClass(targetClass);
-                                    setSelectedFare({ ...fare, price: dynamicPrice });
-                                  }}
-                                  t={t}
-                                  formatPrice={formatPrice}
-                                  delayIndex={idx}
-                                />
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Main Grid Area */}
-                        <div className="lg:col-span-9 space-y-8 min-w-0">
+                      <div className="space-y-8">
                           {/* Matrix / Calendar Strip */}
                           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl space-y-4">
                             <div className="space-y-1">
@@ -3027,30 +2997,42 @@ export default function App() {
                             )}
                           </div>
 
-                          {/* Dynamic Fare Cards Selection (Mobile only, hidden on desktop) */}
-                          <div className="lg:hidden grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {FARES.map((fare, idx) => {
-                              const dynamicPrice = getFarePrice(fare.id, selectedCellPrice);
-                              const isSelected = selectedFare?.id === fare.id;
+                          {/* Dynamic Fare Cards Selection (Unified layout) */}
+                          <div className="space-y-6 pt-4">
+                            <div className="space-y-1">
+                              <h3 className="text-xl font-black text-tarco-navy">
+                                {lang === 'en' ? 'Select Fare Class' : 'اختر فئة السعر'}
+                              </h3>
+                              <p className="text-xs text-slate-400">
+                                {lang === 'en'
+                                  ? 'Choose the fare category that best fits your travel requirements'
+                                  : 'اختر فئة السعر التي تناسب متطلبات سفرك'}
+                              </p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              {FARES.map((fare, idx) => {
+                                const dynamicPrice = getFarePrice(fare.id, selectedCellPrice);
+                                const isSelected = selectedFare?.id === fare.id;
 
-                              return (
-                                <FareCard
-                                  key={fare.id}
-                                  fare={fare}
-                                  dynamicPrice={dynamicPrice}
-                                  isSelected={isSelected}
-                                  lang={lang}
-                                  onClick={() => {
-                                    const targetClass = fare.id === 'business' ? 'business' : 'economy';
-                                    setSelectedClass(targetClass);
-                                    setSelectedFare({ ...fare, price: dynamicPrice });
-                                  }}
-                                  t={t}
-                                  formatPrice={formatPrice}
-                                  delayIndex={idx}
-                                />
-                              );
-                            })}
+                                return (
+                                  <FareCard
+                                    key={fare.id}
+                                    fare={fare}
+                                    dynamicPrice={dynamicPrice}
+                                    isSelected={isSelected}
+                                    lang={lang}
+                                    onClick={() => {
+                                      const targetClass = fare.id === 'business' ? 'business' : 'economy';
+                                      setSelectedClass(targetClass);
+                                      setSelectedFare({ ...fare, price: dynamicPrice });
+                                    }}
+                                    t={t}
+                                    formatPrice={formatPrice}
+                                    delayIndex={idx}
+                                  />
+                                );
+                              })}
+                            </div>
                           </div>
 
                           {/* Navigation Buttons */}
@@ -3069,7 +3051,6 @@ export default function App() {
                             </button>
                           </div>
                         </div>
-                      </div>
                     </motion.div>
                   );
                 })()}
